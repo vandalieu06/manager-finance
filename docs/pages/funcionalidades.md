@@ -78,6 +78,7 @@ En esta fase se definen las bases del sistema, las funcionalidades y las tecnolo
 - Asociar factura a un movimiento
 - Clasificar factura por tipo de gasto
 - OCR para lectura automática de datos (opcional)
+- Tax-free
 
 #### Presupuestos
 
