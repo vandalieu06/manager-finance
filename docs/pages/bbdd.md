@@ -307,4 +307,3 @@ Este esquema está normalizado y cubre:
 - Adjuntos con MinIO (S3 compatible)
 - Resúmenes y estadísticas
 - Base sólida para presupuestos y OCR (opcionales)
-b
