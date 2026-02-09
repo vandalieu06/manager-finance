@@ -9,6 +9,7 @@ from .models import Producto
 
 class TicketParser:
     """Extrae comercio, fecha, total y productos desde el OCR."""
+
     # Inicializa el parser con lista de comercios conocidos.
     def __init__(self) -> None:
         """Carga comercios conocidos y configura el parser."""
@@ -144,7 +145,8 @@ class TicketParser:
         mejor_puntaje = 0.0
         mejor_comercio: Optional[str] = None
         lineas_normalizadas = [
-            re.sub(r"[^A-Za-zÀ-ÿ\s]", "", linea).upper().strip() for linea in lineas[:12]
+            re.sub(r"[^A-Za-zÀ-ÿ\s]", "", linea).upper().strip()
+            for linea in lineas[:12]
         ]
         for nombre_comercio, variantes in self.comercios_conocidos.items():
             for variante in variantes:
@@ -174,14 +176,15 @@ class TicketParser:
         palabras_excluir = [
             "TOTAL",
             "TARGETES",
-            "CANVI",
+            " CANVI",
+            "CANVI:",
             "DESGLOSSAMENT",
             "DESGLOSAMENT",
             "DESGLOSSPMENT",
             "D'IVA",
             "ARTICLES",
             "IVA",
-            "BASE",
+            "BASE IMPOSABLE",
             "DATA",
             "TICKET",
             "NIF",
@@ -193,6 +196,7 @@ class TicketParser:
             "ALDI",
             "DIA",
             "GRACIES",
+            "GRÀCIES",
             "FACTURA",
             "CLIENTE",
             "DIRECCION",
@@ -224,6 +228,8 @@ class TicketParser:
             "TIENDA",
             "ENTREGA",
             "TELEFONO",
+            "TELÉFONO",
+            "TELÈFON",
             "EMAIL",
             "REEMPLAZA",
             "LOY_",
@@ -232,6 +238,29 @@ class TicketParser:
             "CAIXA",
             "ATES PER",
             "ATESA PER",
+            # Seccion de pago (catalan y espanol)
+            "TARGETA",
+            "TARJETA",
+            "BANCARIA",
+            "BANCÀRIA",
+            "VERIFICAT",
+            "DISPOSITIU",
+            "VISA",
+            "DEBIT",
+            "MASTERCARD",
+            "MAESTRO",
+            "EFECTIU",
+            "EFECTIVO",
+            "QUOTA",
+            "AID:",
+            # Direccion / cabecera
+            "RONDA DE ",
+            "CARRER ",
+            "AVINGUDA",
+            "PASSEIG",
+            "PLAÇA",
+            "P.UNIT",
+            "OP:",
         ]
         if any(palabra in linea_upper for palabra in palabras_excluir):
             return False
@@ -257,8 +286,16 @@ class TicketParser:
             "CUOTA IVA",
             "TIPO IVA",
             "FACTURA",
+            "P.UNIT",
         ]
-        return any(k in linea_upper for k in keywords)
+        if any(k in linea_upper for k in keywords):
+            return True
+        # Combinacion de cabecera catalan de Mercadona
+        if "IMPORT" in linea_upper and any(
+            k in linea_upper for k in ["P.UNIT", "PREU", "CANT", "QUANTITAT"]
+        ):
+            return True
+        return False
 
     # Detecta lineas de descuento/cupon/envio para ignorar.
     def _es_linea_descartar(self, linea: str) -> bool:
@@ -288,6 +325,62 @@ class TicketParser:
             return True
         return False
 
+    # Detecta lineas de la seccion de pago del ticket.
+    def _es_linea_pago(self, linea: str) -> bool:
+        """Detecta lineas de pago, tarjetas, verificacion."""
+        linea_upper = linea.upper()
+        keywords = [
+            "TARGETA BANCARIA",
+            "TARJETA BANCARIA",
+            "TARG. BANCARIA",
+            "TARG BANCARIA",
+            "TARGETA BANCÀRIA",
+            "TARJETA BANCÀRIA",
+            "EFECTIU",
+            "EFECTIVO",
+            "CANVI:",
+            "CAMBIO:",
+            "VERIFICAT PER",
+            "VERIFICADO POR",
+            "VISA DEBIT",
+            "VISA CREDIT",
+            "MASTERCARD",
+            "MAESTRO",
+            "AID:",
+            "AID ",
+        ]
+        return any(k in linea_upper for k in keywords)
+
+    # Detecta lineas de direccion o cabecera del comercio.
+    def _es_linea_direccion(self, linea: str) -> bool:
+        """Detecta lineas de direccion postal o telefono."""
+        # Codigo postal (5 digitos) junto con texto
+        if re.search(r"\b\d{5}\b", linea):
+            if len(re.findall(r"[A-Za-zÀ-ÿ]", linea)) >= 3:
+                return True
+        linea_upper = linea.upper()
+        keywords = [
+            "TELÈFON",
+            "TELEFON",
+            "TELÉFONO",
+            "TEL.",
+            "RONDA DE ",
+            "CARRER ",
+            "AVINGUDA ",
+            "PASSEIG ",
+            "PLAÇA ",
+            "CALLE ",
+            "AVDA.",
+            "PLAZA ",
+            "C/ ",
+        ]
+        return any(k in linea_upper for k in keywords)
+
+    # Comprueba que el texto tiene suficientes letras.
+    def _tiene_letras(self, texto: str) -> bool:
+        """Devuelve True si el texto tiene al menos 2 letras."""
+        return len(re.findall(r"[A-Za-zÀ-ÿ]", texto)) >= 2
+
     # Extrae precios con decimales descartando IVA/%.
     def _extraer_precios(self, linea: str) -> List[float]:
         """Extrae valores con decimales evitando IVA/porcentaje."""
@@ -306,84 +399,156 @@ class TicketParser:
 
     # Extrae lista de productos agrupando nombres y precios.
     def extraer_productos(self, lineas: List[str]) -> List[Producto]:
-        """Devuelve productos agrupados por nombre y precios cercanos."""
+        """Devuelve productos extraidos linea a linea con sus precios."""
         productos: List[Producto] = []
 
+        # --- Detectar inicio de la zona de productos ---
         inicio = 0
         for i, linea in enumerate(lineas):
             linea_upper = linea.upper()
-            if any(k in linea_upper for k in ["DESCRIP", "P.V.P", "PVP"]):
+            # Cabeceras de tabla (espanol y catalan)
+            if any(k in linea_upper for k in ["DESCRIP", "P.V.P", "PVP", "P.UNIT"]):
                 contexto = " ".join(lineas[max(0, i - 2) : i + 6]).upper()
-                if any(k in contexto for k in ["CANT", "PRODUCTO", "TOTAL", "UNITARIO"]):
+                if any(
+                    k in contexto
+                    for k in [
+                        "CANT",
+                        "PRODUCTO",
+                        "TOTAL",
+                        "UNITARIO",
+                        "P.UNIT",
+                        "IMPORT",
+                    ]
+                ):
                     inicio = i + 1
-                    while inicio < len(lineas) and self._es_linea_header(lineas[inicio]):
+                    while inicio < len(lineas) and self._es_linea_header(
+                        lineas[inicio]
+                    ):
                         inicio += 1
                     break
-
-        fin = len(lineas)
-        for i in range(max(inicio, int(len(lineas) * 0.5)), len(lineas)):
-            linea_upper = lineas[i].upper()
-            if (
-                "TIPO IVA" in linea_upper
-                and "BASE IMPONIBLE" in " ".join(lineas[i : i + 3]).upper()
+            # Marcadores de fin de cabecera (catalan: OP, CAIXA)
+            if re.search(r"\bOP:\s*\d", linea_upper) or re.search(
+                r"\bCAIXA\s*:\s*\d", linea_upper
             ):
+                inicio = i + 1
+                break
+
+        # --- Detectar fin de la zona de productos ---
+        fin = len(lineas)
+        for i in range(max(inicio, int(len(lineas) * 0.3)), len(lineas)):
+            linea_upper = lineas[i].upper().replace(" ", "")
+            # Espanol: resumen IVA
+            if "TIPOIVA" in linea_upper and "BASEIMPONIBLE" in " ".join(
+                lineas[i : i + 3]
+            ).upper().replace(" ", ""):
+                fin = i
+                break
+            # Catalan: desglose IVA
+            if "DESGLOSSAMENT" in linea_upper or "DESGLOSAMENT" in linea_upper:
+                fin = i
+                break
+            # TOTAL standalone (linea que empieza por TOTAL)
+            if re.match(r"^\s*TOTAL\b", lineas[i], re.IGNORECASE):
+                fin = i
+                break
+            # Seccion de pago
+            if self._es_linea_pago(lineas[i]):
+                fin = i
+                break
+            # Catalan: ARTICLES: N
+            if re.match(r"^\s*ARTICLES\s*:", lineas[i], re.IGNORECASE):
                 fin = i
                 break
 
+        # --- Extraer productos linea a linea ---
         nombre_buffer: List[str] = []
-        precios_candidatos: List[float] = []
-        es_descuento = False
+        precio_actual: Optional[float] = None
 
-        def _guardar_producto():
-            nonlocal nombre_buffer, precios_candidatos, es_descuento
-            if nombre_buffer and precios_candidatos and not es_descuento:
-                positivos = [p for p in precios_candidatos if p > 0]
-                precio_total = max(positivos) if positivos else None
-                if precio_total is not None:
-                    nombre = " ".join(nombre_buffer).strip().upper()
-                    productos.append(Producto(nombre=nombre, precio_total=precio_total))
+        def _guardar():
+            nonlocal nombre_buffer, precio_actual
+            if nombre_buffer and precio_actual is not None and precio_actual > 0:
+                nombre = " ".join(nombre_buffer).strip()
+                # Limpiar cantidad al inicio (ej: "2 BIFIDUS" -> "BIFIDUS")
+                nombre_sin_cantidad = re.sub(r"^\d+\s+", "", nombre)
+                if len(nombre_sin_cantidad) >= 3:
+                    nombre = nombre_sin_cantidad
+                nombre = nombre.upper()
+                if len(nombre) >= 3:
+                    productos.append(
+                        Producto(nombre=nombre, precio_total=precio_actual)
+                    )
             nombre_buffer = []
-            precios_candidatos = []
-            es_descuento = False
+            precio_actual = None
 
         for linea in lineas[inicio:fin]:
             linea_limpia = re.sub(r"\s+", " ", linea).strip()
             if not linea_limpia:
                 continue
 
+            # Saltar lineas que no son productos
             if self._es_linea_descartar(linea_limpia):
-                _guardar_producto()
-                es_descuento = True
+                _guardar()
                 continue
-
             if self._es_linea_header(linea_limpia):
-                _guardar_producto()
+                _guardar()
+                continue
+            if self._es_linea_pago(linea_limpia):
+                _guardar()
+                continue
+            if self._es_linea_direccion(linea_limpia):
+                _guardar()
                 continue
 
+            # Comprobar precios en esta linea
             precios = self._extraer_precios(linea_limpia)
+
             if precios:
-                precios_candidatos.extend(precios)
-                continue
+                positivos = [p for p in precios if p > 0]
+                precio = max(positivos) if positivos else None
 
-            if self._es_linea_codigo(linea_limpia):
-                continue
+                # Extraer parte de texto (nombre) quitando los numeros decimales
+                nombre_parte = re.sub(r"-?\d+[.,]\d{2}", "", linea_limpia)
+                nombre_parte = re.sub(r"\s+", " ", nombre_parte).strip()
+                # Limpiar numeros sueltos y puntuacion al inicio/final
+                nombre_parte = re.sub(
+                    r"^[\s\d.,*×xX-]+\s*|\s*[\s\d.,*×xX-]+$", "", nombre_parte
+                ).strip()
 
-            if nombre_buffer and precios_candidatos:
-                solo_letras = re.sub(r"[^A-Za-zÀ-ÿ\s]", "", linea_limpia).strip()
-                palabras = solo_letras.split()
                 if (
-                    len(palabras) <= 2
-                    and len(solo_letras) < 20
-                    and self._es_linea_candidata_producto(linea_limpia)
+                    nombre_parte
+                    and len(nombre_parte) >= 3
+                    and self._tiene_letras(nombre_parte)
                 ):
-                    nombre_buffer.append(linea_limpia)
+                    # Linea con nombre + precio: guardar anterior y crear nuevo
+                    if nombre_buffer and precio_actual is not None:
+                        _guardar()
+                    if nombre_buffer:
+                        nombre_buffer.append(nombre_parte)
+                    else:
+                        nombre_buffer = [nombre_parte]
+                    precio_actual = precio
+                    _guardar()
+                else:
+                    # Linea solo con precio(s)
+                    if nombre_buffer:
+                        precio_actual = precio
+                        _guardar()
+                    # Si no hay nombre en buffer, precio huerfano -> ignorar
+            else:
+                # Linea sin precio (solo texto)
+                if self._es_linea_codigo(linea_limpia):
                     continue
-                _guardar_producto()
+                if not self._es_linea_candidata_producto(linea_limpia):
+                    _guardar()
+                    continue
 
-            if self._es_linea_candidata_producto(linea_limpia):
+                # Si ya teniamos nombre + precio, guardar primero
+                if nombre_buffer and precio_actual is not None:
+                    _guardar()
+
                 nombre_buffer.append(linea_limpia)
 
-        _guardar_producto()
+        _guardar()
         return productos
 
     # Elimina falsos positivos comparando con el nombre del comercio.
@@ -400,18 +565,18 @@ class TicketParser:
         for producto in productos:
             nombre_norm = re.sub(r"[^A-Za-zÀ-ÿ\s]", "", producto.nombre).upper().strip()
             similitud = SequenceMatcher(None, nombre_norm, comercio_norm).ratio()
-            if similitud >= 0.5:
+            if similitud >= 0.6:
                 continue
 
             palabras = nombre_norm.split()
             for n_prefijo in range(min(3, len(palabras)), 0, -1):
                 prefijo = " ".join(palabras[:n_prefijo])
                 sim_prefijo = SequenceMatcher(None, prefijo, comercio_norm).ratio()
-                if sim_prefijo >= 0.6 or (
+                if sim_prefijo >= 0.75 or (
                     n_prefijo <= 2
                     and all(
                         any(
-                            SequenceMatcher(None, p, cw).ratio() > 0.6
+                            SequenceMatcher(None, p, cw).ratio() > 0.7
                             for cw in comercio_words
                         )
                         for p in palabras[:n_prefijo]

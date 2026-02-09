@@ -7,6 +7,7 @@ from typing import List
 @dataclass(frozen=True)
 class OCRConfig:
     """Configuracion general para el OCR y preprocesado."""
+
     ruta_imagen: str
     umbral_min_confianza: float = 0.25
     lenguajes_ocr: List[str] = None
@@ -31,4 +32,4 @@ class OCRConfig:
     def __post_init__(self):
         """Completa valores por defecto para la configuracion."""
         if self.lenguajes_ocr is None:
-            object.__setattr__(self, "lenguajes_ocr", ["es", "en"])
+            object.__setattr__(self, "lenguajes_ocr", ["es"])
