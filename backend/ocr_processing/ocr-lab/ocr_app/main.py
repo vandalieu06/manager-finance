@@ -34,7 +34,7 @@ def imprimir_resultados(datos: dict) -> None:
 def main(argv: list[str]) -> dict:
     # Punto de entrada principal para ejecutar OCR + parsing.
     """Ejecuta el flujo completo OCR + parsing desde CLI."""
-    ruta_imagen = argv[1] if len(argv) > 1 else "e-ticket.png"
+    ruta_imagen = argv[1] if len(argv) > 1 else "amazon.jpg"
     config = OCRConfig(ruta_imagen=ruta_imagen)
 
     print("=" * 60)
