@@ -1,14 +1,23 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from typing import Union
 
 import cv2
 
-from .config import OCRConfig
-from .ocr_engine import OCREngine
-from .parsing import TicketParser, export_productos_json, export_tsv
+if __package__ in {None, ""}:
+    # Permite ejecutar como script:
+    # python /ruta/proyecto/ocr_app/main.py
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from ocr_app.config import OCRConfig
+    from ocr_app.ocr_engine import OCREngine
+    from ocr_app.parsing import TicketParser, export_productos_json, export_tsv
+else:
+    from .config import OCRConfig
+    from .ocr_engine import OCREngine
+    from .parsing import TicketParser, export_productos_json, export_tsv
 
 
 def imprimir_resultados(datos: dict) -> None:
