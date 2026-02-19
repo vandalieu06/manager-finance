@@ -471,7 +471,7 @@ class TicketParser:
 
     def _lineas_a_texto(self, texto_ocr: str) -> List[str]:
         """Normaliza texto OCR a lista de líneas sin vacíos."""
-        return [re.sub(r"\s+", " ", l).strip() for l in texto_ocr.splitlines() if l.strip()]
+        return [re.sub(r"\s+", " ", li).strip() for li in texto_ocr.splitlines() if li.strip()]
 
     def _normalizar_fecha_iso(self, valor: Optional[str]) -> str:
         """Convierte fecha libre detectada a ISO-8601 minutos."""
