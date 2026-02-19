@@ -8,6 +8,7 @@ from .config import OCRConfig
 
 class Preprocessor:
     """Aplica distintas tecnicas de preprocesado a imagenes."""
+
     # Inicializa el preprocesador con configuracion compartida.
     def __init__(self, config: OCRConfig) -> None:
         """Inicializa el preprocesador con la configuracion dada."""
@@ -22,7 +23,9 @@ class Preprocessor:
         return imagen_bgr
 
     # Calcula factor de escalado objetivo segun ancho y limites.
-    def _calcular_factor_escalado(self, imagen_gris: np.ndarray, factor_base: float) -> float:
+    def _calcular_factor_escalado(
+        self, imagen_gris: np.ndarray, factor_base: float
+    ) -> float:
         """Calcula el factor de escalado para acercarse al ancho objetivo."""
         alto, ancho = imagen_gris.shape[:2]
         ancho_deseado = self.config.ancho_objetivo_ocr
@@ -35,7 +38,9 @@ class Preprocessor:
     ) -> np.ndarray:
         """Aumenta resolucion y binariza para mejorar texto pequeno."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
-        factor = self._calcular_factor_escalado(imagen_gris, self.config.escalado_fuerte)
+        factor = self._calcular_factor_escalado(
+            imagen_gris, self.config.escalado_fuerte
+        )
         imagen_escalada = cv2.resize(
             imagen_gris,
             None,
@@ -73,11 +78,15 @@ class Preprocessor:
         imagen_con_contraste = clahe.apply(imagen_escalada)
         return imagen_con_contraste
 
+
+
     # Preprocesa con Otsu tras escalado inteligente.
     def preprocesar_otsu(self, imagen_bgr: np.ndarray) -> np.ndarray:
         """Aplica umbral Otsu tras escalar para fondo uniforme."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
-        factor = self._calcular_factor_escalado(imagen_gris, self.config.escalado_fuerte)
+        factor = self._calcular_factor_escalado(
+            imagen_gris, self.config.escalado_fuerte
+        )
         imagen_escalada = cv2.resize(
             imagen_gris,
             None,
@@ -91,11 +100,17 @@ class Preprocessor:
         )
         return imagen_binaria
 
+
+
     # Invierte la imagen si el fondo es oscuro y binariza.
-    def preprocesar_invertir_si_fondo_oscuro(self, imagen_bgr: np.ndarray) -> np.ndarray:
+    def preprocesar_invertir_si_fondo_oscuro(
+        self, imagen_bgr: np.ndarray
+    ) -> np.ndarray:
         """Invierte colores cuando el fondo es oscuro y binariza."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
-        factor = self._calcular_factor_escalado(imagen_gris, self.config.escalado_fuerte)
+        factor = self._calcular_factor_escalado(
+            imagen_gris, self.config.escalado_fuerte
+        )
         imagen_escalada = cv2.resize(
             imagen_gris,
             None,
@@ -153,12 +168,14 @@ class Preprocessor:
                     M,
                     (ancho, alto),
                     flags=cv2.INTER_CUBIC,
-                borderMode=cv2.BORDER_REPLICATE,
-            )
+                    borderMode=cv2.BORDER_REPLICATE,
+                )
         return imagen_contraste
 
     # Construye todas las variantes de preprocesado para OCR.
-    def construir_versiones(self, imagen_bgr: np.ndarray) -> list[tuple[str, np.ndarray]]:
+    def construir_versiones(
+        self, imagen_bgr: np.ndarray
+    ) -> list[tuple[str, np.ndarray]]:
         """Devuelve lista de imagenes preprocesadas con nombre."""
         imagen_orientada = self.orientar_vertical_si_horizontal(imagen_bgr)
         return [
@@ -166,7 +183,10 @@ class Preprocessor:
                 "Metodo 1: Escalado + Binarizacion",
                 self.preprocesar_escalado_y_binarizacion_adaptativa(imagen_orientada),
             ),
-            ("Metodo 2: CLAHE agresivo", self.preprocesar_clahe_agresivo(imagen_orientada)),
+            (
+                "Metodo 2: CLAHE agresivo",
+                self.preprocesar_clahe_agresivo(imagen_orientada),
+            ),
             ("Metodo 3: Otsu", self.preprocesar_otsu(imagen_orientada)),
             (
                 "Metodo 4: Invertir si fondo oscuro",

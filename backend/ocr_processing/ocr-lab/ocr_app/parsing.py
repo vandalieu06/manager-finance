@@ -1,12 +1,181 @@
 from __future__ import annotations
 
-import re
 import json
+import re
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Any, Dict, List, Optional
 
 from .models import Producto
+
+# Mantener estas listas como constantes evita "magia" repartida por el código.
+# También facilita ampliar reglas sin tocar la lógica principal.
+KNOWN_STORES = {
+    "BON PREU": ["BON PREU", "BONPREU", "BON-PREU"],
+    "ESCLAT": ["ESCLAT", "ESCIAT"],
+    "MERCADONA": ["MERCADONA"],
+    "CARREFOUR": ["CARREFOUR"],
+    "DIA": ["DIA %", "DIA MARKET"],
+    "LIDL": ["LIDL"],
+    "ALDI": ["ALDI"],
+    "MEDIA MARKT": ["MEDIA MARKT", "MEDIAMARKT", "MEDIA MARKT SATURN"],
+}
+
+PRODUCT_HEADER_KEYWORDS = [
+    "DESCRIP",
+    "PRODUCTO",
+    "CANT.",
+    "P.V.P",
+    "PVP",
+    "UNITARIO",
+    "TRIBUTARIA",
+    "POR UNIDAD",
+    "BASE IMPONIBLE",
+    "CUOTA IVA",
+    "TIPO IVA",
+    "FACTURA",
+    "P.UNIT",
+]
+
+DISCARDED_LINE_KEYWORDS = [
+    "DESCUENTO",
+    "CUPON",
+    "CUPÓN",
+    "LOY_",
+    "APP",
+    "GASTOS",
+    "ENVIO",
+    "ENVÍO",
+]
+
+PAYMENT_SECTION_KEYWORDS = [
+    "TARGETA BANCARIA",
+    "TARJETA BANCARIA",
+    "TARGETA",
+    "TARJETA",
+    "TARG. BANCARIA",
+    "TARG BANCARIA",
+    "TARGETA BANCÀRIA",
+    "TARJETA BANCÀRIA",
+    "EFECTIU",
+    "EFECTIVO",
+    "CANVI:",
+    "CAMBIO:",
+    "VERIFICAT PER",
+    "VERIFICADO POR",
+    "VISA DEBIT",
+    "VISA CREDIT",
+    "MASTERCARD",
+    "MAESTRO",
+    "AID:",
+    "AID ",
+]
+
+ADDRESS_HINT_KEYWORDS = [
+    "TELÈFON",
+    "TELEFON",
+    "TELÉFONO",
+    "TEL.",
+    "RONDA DE ",
+    "CARRER ",
+    "AVINGUDA ",
+    "PASSEIG ",
+    "PLAÇA ",
+    "CALLE ",
+    "AVDA.",
+    "PLAZA ",
+    "C/ ",
+]
+
+NON_PRODUCT_HINTS = [
+    "TOTAL",
+    "TARGETES",
+    " CANVI",
+    "CANVI:",
+    "DESGLOSSAMENT",
+    "DESGLOSAMENT",
+    "DESGLOSSPMENT",
+    "D'IVA",
+    "ARTICLES",
+    "IVA",
+    "BASE IMPOSABLE",
+    "DATA",
+    "FECHA",
+    "HORA",
+    "TICKET",
+    "NIF",
+    "BON PREU",
+    "ESCLAT",
+    "MERCADONA",
+    "CARREFOUR",
+    "LIDL",
+    "ALDI",
+    "DIA",
+    "GRACIES",
+    "GRÀCIES",
+    "FACTURA",
+    "CLIENTE",
+    "DIRECCION",
+    "PAGO",
+    "CUPON",
+    "CUPÓN",
+    "DESCUENTO",
+    "ENVIO",
+    "GASTOS",
+    "TIPO IVA",
+    "BASE IMPONIBLE",
+    "CUOTA IVA",
+    "TRIBUTARIA",
+    "POR UNIDAD",
+    "UNITARIO",
+    "UNIDAD",
+    "MEDIA MARKT",
+    "SATURN",
+    "UNIPERSONAL",
+    "REGISTRO",
+    "MERCANTIL",
+    "PAGINA",
+    "PEDIDO",
+    "REFERENCIA",
+    "METODO",
+    "NUMERO",
+    "IDENTIFICACION",
+    "RECOGIDA",
+    "TIENDA",
+    "ENTREGA",
+    "TELEFONO",
+    "TELÉFONO",
+    "TELÈFON",
+    "EMAIL",
+    "REEMPLAZA",
+    "LOY_",
+    "APP",
+    "CAIXERA",
+    "CAIXA",
+    "ATES PER",
+    "ATESA PER",
+    "TARGETA",
+    "TARJETA",
+    "BANCARIA",
+    "BANCÀRIA",
+    "VERIFICAT",
+    "DISPOSITIU",
+    "VISA",
+    "DEBIT",
+    "MASTERCARD",
+    "MAESTRO",
+    "EFECTIU",
+    "EFECTIVO",
+    "QUOTA",
+    "AID:",
+    "RONDA DE ",
+    "CARRER ",
+    "AVINGUDA",
+    "PASSEIG",
+    "PLAÇA",
+    "P.UNIT",
+    "OP:",
+]
 
 
 class TicketParser:
@@ -21,57 +190,53 @@ class TicketParser:
     - P\t<method>\t<amount> (opcional)
     """
 
-    # Inicializa el parser con lista de comercios conocidos.
     def __init__(self) -> None:
-        """Carga comercios conocidos y configura el parser."""
-        self.comercios_conocidos = {
-            "BON PREU": ["BON PREU", "BONPREU", "BON-PREU"],
-            "ESCLAT": ["ESCLAT", "ESCIAT"],
-            "MERCADONA": ["MERCADONA"],
-            "CARREFOUR": ["CARREFOUR"],
-            "DIA": ["DIA %", "DIA MARKET"],
-            "LIDL": ["LIDL"],
-            "ALDI": ["ALDI"],
-            "MEDIA MARKT": ["MEDIA MARKT", "MEDIAMARKT", "MEDIA MARKT SATURN"],
-        }
+        self.comercios_conocidos = KNOWN_STORES
 
-    # Normaliza numeros con coma o punto decimal.
     def normalizar_numero(self, texto: str) -> Optional[float]:
-        """Convierte numeros con coma/punto en float normalizado."""
-        limpio = re.sub(r"[^\d,.\-]", "", texto.replace(" ", ""))
-        if not re.search(r"\d", limpio):
+        """Convierte texto con formato europeo o anglosajón a float.
+
+        OCR mezcla símbolos, separadores y espacios. Este método prioriza tolerancia:
+        intenta rescatar el número más probable y descarta lo ambiguo.
+        """
+        numero_limpio = re.sub(r"[^\d,.\-]", "", texto.replace(" ", ""))
+        if not re.search(r"\d", numero_limpio):
             return None
 
         separador_decimal = None
-        if "." in limpio and "," in limpio:
-            separador_decimal = "," if limpio.rfind(",") > limpio.rfind(".") else "."
-        elif "," in limpio:
-            partes = limpio.split(",")
+        if "." in numero_limpio and "," in numero_limpio:
+            separador_decimal = (
+                "," if numero_limpio.rfind(",") > numero_limpio.rfind(".") else "."
+            )
+        elif "," in numero_limpio:
+            partes = numero_limpio.split(",")
             if len(partes) >= 2 and 1 <= len(partes[-1]) <= 3:
                 separador_decimal = ","
-        elif "." in limpio:
-            partes = limpio.split(".")
+        elif "." in numero_limpio:
+            partes = numero_limpio.split(".")
             if len(partes) >= 2 and 1 <= len(partes[-1]) <= 3:
                 separador_decimal = "."
 
         if separador_decimal == ",":
-            limpio = limpio.replace(".", "")
-            limpio = limpio.replace(",", ".")
+            numero_limpio = numero_limpio.replace(".", "")
+            numero_limpio = numero_limpio.replace(",", ".")
         elif separador_decimal == ".":
-            limpio = limpio.replace(",", "")
+            numero_limpio = numero_limpio.replace(",", "")
         else:
-            limpio = re.sub(r"[.,]", "", limpio)
+            numero_limpio = re.sub(r"[.,]", "", numero_limpio)
 
-        if limpio in {"", "-", ".", "-."}:
+        if numero_limpio in {"", "-", ".", "-."}:
             return None
         try:
-            return float(limpio)
+            return float(numero_limpio)
         except ValueError:
             return None
 
-    # Extrae fechas en formatos habituales o con OCR corrupto.
     def extraer_fecha(self, texto: str) -> Optional[str]:
-        """Extrae fechas con varios patrones y tolerancia a OCR."""
+        """Extrae fecha en formatos frecuentes de ticket.
+
+        Se prueban primero formatos completos y luego alternativas con OCR defectuoso.
+        """
         patrones = [
             r"\b(\d{2}[-/\.]\d{2}[-/\.]\d{2,4})\b",
             r"\b(\d{1,2}\s+(?:ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[A-Z]*\s+\d{2,4})\b",
@@ -88,9 +253,11 @@ class TicketParser:
             return f"{s[:2]}-{s[2:4]}-{s[5:]}" if len(s) >= 5 else s
         return None
 
-    # Busca fecha/hora con contexto alrededor de palabras clave.
     def extraer_fecha_y_hora_por_contexto(self, lineas: List[str]) -> Optional[str]:
-        """Busca fecha/hora cercana a etiquetas como 'Fecha de factura'."""
+        """Busca fecha/hora cerca de etiquetas semánticas.
+
+        En OCR, la fecha puede no estar limpia; mirar el contexto mejora acierto.
+        """
         prioridad_alta = ["FECHA DE FACTURA", "FECHA DE COMPRA", "FECHA FACTURA"]
         prioridad_media = ["FECHA DE PAGO", "FECHA PAGO", "FECHA DE ENTREGA"]
         prioridad_baja = ["DATA", "TICKET", "FECHA", "HORA"]
@@ -111,60 +278,92 @@ class TicketParser:
                         return fecha_corta.group(1)
         return None
 
-    # Extrae el total priorizando el resumen de IVA y luego TOTAL.
     def extraer_total_por_contexto(self, lineas: List[str]) -> Optional[float]:
-        """Obtiene el total priorizando el resumen final de IVA."""
+        """Obtiene el total aplicando una estrategia por puntuación.
+
+        Primero se priorizan líneas que semánticamente indican TOTAL.
+        Si no hay coincidencias claras, se usa fallback con el mayor decimal plausible.
+        """
+        candidatos_total = self._buscar_candidatos_total(lineas)
+        if candidatos_total:
+            candidatos_total.sort(key=lambda x: (x[0], x[2]), reverse=True)
+            return candidatos_total[0][1]
+        return self._buscar_total_por_fallback(lineas)
+
+    def _buscar_candidatos_total(
+        self, lineas: List[str]
+    ) -> List[tuple[int, float, int]]:
         candidatos: List[tuple[int, float, int]] = []
         for indice, linea in enumerate(lineas):
             linea_upper = linea.upper()
-            compacta = linea_upper.replace(" ", "")
-            es_linea_total = bool(
-                re.search(r"\b(TOTAL|TOTAI|A\s*PAGAR|IMPORTE\s*TOTAL)\b", linea_upper)
-            )
-            if not es_linea_total:
+            if not re.search(r"\b(TOTAL|TOTAI|A\s*PAGAR|IMPORTE\s*TOTAL)\b", linea_upper):
                 continue
 
-            es_total_iva = "TOTALIVA" in compacta or "CUOTAIVA" in compacta
-            es_subtotal = "SUBTOTAL" in compacta
+            linea_compacta = linea_upper.replace(" ", "")
+            es_total_iva = "TOTALIVA" in linea_compacta or "CUOTAIVA" in linea_compacta
+            es_subtotal = "SUBTOTAL" in linea_compacta
             solo_letras = re.sub(r"[^A-Z]", "", linea_upper)
-            es_standalone = solo_letras in {"TOTAL", "TOTAI", "APAGAR", "IMPORTETOTAL"}
-            for offset in range(indice, min(indice + 3, len(lineas))):
-                for numero in self._extraer_precios(lineas[offset]):
-                    if numero <= 0:
+            es_linea_aislada = solo_letras in {"TOTAL", "TOTAI", "APAGAR", "IMPORTETOTAL"}
+
+            for indice_candidato in range(indice, min(indice + 3, len(lineas))):
+                for precio in self._extraer_precios(lineas[indice_candidato]):
+                    if precio <= 0:
                         continue
-                    score = 100 + offset + (30 if es_standalone else 0)
-                    if es_total_iva:
-                        score -= 80
-                    if es_subtotal:
-                        score -= 60
-                    candidatos.append((score, numero, offset))
+                    score = self._puntuar_candidato_total(
+                        indice_candidato=indice_candidato,
+                        es_linea_aislada=es_linea_aislada,
+                        es_total_iva=es_total_iva,
+                        es_subtotal=es_subtotal,
+                    )
+                    candidatos.append((score, precio, indice_candidato))
+        return candidatos
 
-        if candidatos:
-            candidatos.sort(key=lambda x: (x[0], x[2]), reverse=True)
-            return candidatos[0][1]
+    def _puntuar_candidato_total(
+        self,
+        indice_candidato: int,
+        es_linea_aislada: bool,
+        es_total_iva: bool,
+        es_subtotal: bool,
+    ) -> int:
+        """Asigna prioridad a números candidatos a total.
 
-        decimales_encontrados: List[float] = []
+        Reglas:
+        - Línea "TOTAL" sola recibe extra de confianza.
+        - Totales de IVA y subtotales se penalizan para evitar falsos positivos.
+        """
+        score = 100 + indice_candidato + (30 if es_linea_aislada else 0)
+        if es_total_iva:
+            score -= 80
+        if es_subtotal:
+            score -= 60
+        return score
+
+    def _buscar_total_por_fallback(self, lineas: List[str]) -> Optional[float]:
+        """Fallback: devolver el mayor valor decimal que parezca monetario."""
+        decimales_validos: List[float] = []
         for linea in lineas:
             if any(k in linea.upper() for k in ["IVA", "%", "TIPO", "BASE IMPONIBLE"]):
                 continue
             for numero in self._extraer_precios(linea):
                 if numero > 0.5:
-                    decimales_encontrados.append(numero)
+                    decimales_validos.append(numero)
+        return max(decimales_validos) if decimales_validos else None
 
-        if decimales_encontrados:
-            return max(decimales_encontrados)
-        return None
-
-    # Detecta el comercio con lista conocida + fuzzy en cabecera.
     def extraer_comercio(self, lineas: List[str]) -> Optional[str]:
-        """Identifica el comercio usando coincidencia exacta y fuzzy."""
+        """Identifica comercio por coincidencia exacta y fuzzy matching.
+
+        Se intenta:
+        1) match exacto por variantes conocidas (rápido y fiable),
+        2) fuzzy en cabecera (tolerante a OCR),
+        3) fallback con primera línea plausible.
+        """
         texto_completo = " ".join(lineas).upper()
         for nombre_comercio, variantes in self.comercios_conocidos.items():
             if any(variante in texto_completo for variante in variantes):
                 return nombre_comercio
 
         mejor_puntaje = 0.0
-        mejor_comercio: Optional[str] = None
+        mejor_candidato: Optional[str] = None
         lineas_normalizadas = [
             re.sub(r"[^A-Za-zÀ-ÿ\s]", "", linea).upper().strip()
             for linea in lineas[:12]
@@ -178,9 +377,9 @@ class TicketParser:
                     puntaje = SequenceMatcher(None, candidato, variante_norm).ratio()
                     if puntaje > mejor_puntaje:
                         mejor_puntaje = puntaje
-                        mejor_comercio = nombre_comercio
+                        mejor_candidato = nombre_comercio
         if mejor_puntaje >= 0.7:
-            return mejor_comercio
+            return mejor_candidato
 
         for linea in lineas[:10]:
             solo_letras = re.sub(r"[^A-Za-zÀ-ÿ\s]", "", linea).strip()
@@ -188,162 +387,45 @@ class TicketParser:
                 return solo_letras.upper()
         return None
 
-    # Filtra lineas que no parecen nombres de producto.
     def _es_linea_candidata_producto(self, linea: str) -> bool:
-        """Determina si la linea parece un nombre de producto."""
-        linea_upper = linea.upper()
-        linea_strip = linea.strip()
-        if not linea_strip:
+        """Filtra ruido y conserva texto que sí puede ser producto.
+
+        Mala práctica corregida:
+        Antes esta validación mezclaba reglas de cabecera, pago y dirección sin
+        dejar claro el objetivo. Ahora se centra en una única pregunta:
+        "¿esta línea puede ser nombre de producto?".
+        """
+        texto = linea.strip()
+        if not texto:
             return False
-        if linea_strip.upper() in {"KG", "UD", "U", "UN", "L", "ML"}:
+        if texto.upper() in {"KG", "UD", "U", "UN", "L", "ML"}:
             return True
-        if len(linea_strip) < 2:
+        if len(texto) < 2:
             return False
-        palabras_excluir = [
-            "TOTAL",
-            "TARGETES",
-            " CANVI",
-            "CANVI:",
-            "DESGLOSSAMENT",
-            "DESGLOSAMENT",
-            "DESGLOSSPMENT",
-            "D'IVA",
-            "ARTICLES",
-            "IVA",
-            "BASE IMPOSABLE",
-            "DATA",
-            "FECHA",
-            "HORA",
-            "TICKET",
-            "NIF",
-            "BON PREU",
-            "ESCLAT",
-            "MERCADONA",
-            "CARREFOUR",
-            "LIDL",
-            "ALDI",
-            "DIA",
-            "GRACIES",
-            "GRÀCIES",
-            "FACTURA",
-            "CLIENTE",
-            "DIRECCION",
-            "PAGO",
-            "CUPON",
-            "CUPÓN",
-            "DESCUENTO",
-            "ENVIO",
-            "GASTOS",
-            "TIPO IVA",
-            "BASE IMPONIBLE",
-            "CUOTA IVA",
-            "TRIBUTARIA",
-            "POR UNIDAD",
-            "UNITARIO",
-            "UNIDAD",
-            "MEDIA MARKT",
-            "SATURN",
-            "UNIPERSONAL",
-            "REGISTRO",
-            "MERCANTIL",
-            "PAGINA",
-            "PEDIDO",
-            "REFERENCIA",
-            "METODO",
-            "NUMERO",
-            "IDENTIFICACION",
-            "RECOGIDA",
-            "TIENDA",
-            "ENTREGA",
-            "TELEFONO",
-            "TELÉFONO",
-            "TELÈFON",
-            "EMAIL",
-            "REEMPLAZA",
-            "LOY_",
-            "APP",
-            "CAIXERA",
-            "CAIXA",
-            "ATES PER",
-            "ATESA PER",
-            # Seccion de pago (catalan y espanol)
-            "TARGETA",
-            "TARJETA",
-            "BANCARIA",
-            "BANCÀRIA",
-            "VERIFICAT",
-            "DISPOSITIU",
-            "VISA",
-            "DEBIT",
-            "MASTERCARD",
-            "MAESTRO",
-            "EFECTIU",
-            "EFECTIVO",
-            "QUOTA",
-            "AID:",
-            # Direccion / cabecera
-            "RONDA DE ",
-            "CARRER ",
-            "AVINGUDA",
-            "PASSEIG",
-            "PLAÇA",
-            "P.UNIT",
-            "OP:",
-        ]
-        if any(palabra in linea_upper for palabra in palabras_excluir):
+        if any(hint in texto.upper() for hint in NON_PRODUCT_HINTS):
             return False
-        solo_letras = re.sub(r"[^A-Za-zÀ-ÿ\s]", "", linea).strip()
+        solo_letras = re.sub(r"[^A-Za-zÀ-ÿ\s]", "", texto).strip()
         if len(solo_letras) < 2:
             return False
         return True
 
-    # Detecta encabezados de la tabla de productos.
     def _es_linea_header(self, linea: str) -> bool:
-        """Detecta encabezados de columnas de la tabla."""
+        """Detecta cabeceras de columnas de productos."""
         linea_upper = linea.upper()
-        keywords = [
-            "DESCRIP",
-            "PRODUCTO",
-            "CANT.",
-            "P.V.P",
-            "PVP",
-            "UNITARIO",
-            "TRIBUTARIA",
-            "POR UNIDAD",
-            "BASE IMPONIBLE",
-            "CUOTA IVA",
-            "TIPO IVA",
-            "FACTURA",
-            "P.UNIT",
-        ]
-        if any(k in linea_upper for k in keywords):
+        if any(k in linea_upper for k in PRODUCT_HEADER_KEYWORDS):
             return True
-        # Combinacion de cabecera catalan de Mercadona
         if "IMPORT" in linea_upper and any(
             k in linea_upper for k in ["P.UNIT", "PREU", "CANT", "QUANTITAT"]
         ):
             return True
         return False
 
-    # Detecta lineas de descuento/cupon/envio para ignorar.
     def _es_linea_descartar(self, linea: str) -> bool:
-        """Marca lineas de descuentos/cupones/envios."""
-        linea_upper = linea.upper()
-        keywords = [
-            "DESCUENTO",
-            "CUPON",
-            "CUPÓN",
-            "LOY_",
-            "APP",
-            "GASTOS",
-            "ENVIO",
-            "ENVÍO",
-        ]
-        return any(k in linea_upper for k in keywords)
+        """Marca líneas no-producto (descuentos, cupones, envío)."""
+        return any(k in linea.upper() for k in DISCARDED_LINE_KEYWORDS)
 
-    # Detecta codigos o SKU con muchos digitos.
     def _es_linea_codigo(self, linea: str) -> bool:
-        """Detecta lineas que parecen codigos numericos."""
+        """Detecta líneas que parecen códigos internos o SKU."""
         sin_espacios = re.sub(r"\s+", "", linea)
         if len(sin_espacios) < 5:
             return False
@@ -355,67 +437,23 @@ class TicketParser:
             return True
         return False
 
-    # Detecta lineas de la seccion de pago del ticket.
     def _es_linea_pago(self, linea: str) -> bool:
-        """Detecta lineas de pago, tarjetas, verificacion."""
-        linea_upper = linea.upper()
-        keywords = [
-            "TARGETA BANCARIA",
-            "TARJETA BANCARIA",
-            "TARGETA",
-            "TARJETA",
-            "TARG. BANCARIA",
-            "TARG BANCARIA",
-            "TARGETA BANCÀRIA",
-            "TARJETA BANCÀRIA",
-            "EFECTIU",
-            "EFECTIVO",
-            "CANVI:",
-            "CAMBIO:",
-            "VERIFICAT PER",
-            "VERIFICADO POR",
-            "VISA DEBIT",
-            "VISA CREDIT",
-            "MASTERCARD",
-            "MAESTRO",
-            "AID:",
-            "AID ",
-        ]
-        return any(k in linea_upper for k in keywords)
+        """Detecta líneas de pago para separar fin de productos."""
+        return any(k in linea.upper() for k in PAYMENT_SECTION_KEYWORDS)
 
-    # Detecta lineas de direccion o cabecera del comercio.
     def _es_linea_direccion(self, linea: str) -> bool:
-        """Detecta lineas de direccion postal o telefono."""
-        # Codigo postal (5 digitos) junto con texto
+        """Detecta líneas de dirección/teléfono de cabecera."""
         if re.search(r"\b\d{5}\b", linea):
             if len(re.findall(r"[A-Za-zÀ-ÿ]", linea)) >= 3:
                 return True
-        linea_upper = linea.upper()
-        keywords = [
-            "TELÈFON",
-            "TELEFON",
-            "TELÉFONO",
-            "TEL.",
-            "RONDA DE ",
-            "CARRER ",
-            "AVINGUDA ",
-            "PASSEIG ",
-            "PLAÇA ",
-            "CALLE ",
-            "AVDA.",
-            "PLAZA ",
-            "C/ ",
-        ]
-        return any(k in linea_upper for k in keywords)
+        return any(k in linea.upper() for k in ADDRESS_HINT_KEYWORDS)
 
-    # Comprueba que el texto tiene suficientes letras.
     def _tiene_letras(self, texto: str) -> bool:
-        """Devuelve True si el texto tiene al menos 2 letras."""
+        """Valida que hay suficiente información textual."""
         return len(re.findall(r"[A-Za-zÀ-ÿ]", texto)) >= 2
 
-    # Extrae precios con decimales descartando IVA/%.
     def _extraer_precios(self, linea: str) -> List[float]:
-        """Extrae valores con decimales evitando IVA/porcentaje."""
+        """Extrae precios decimales descartando patrones no monetarios."""
         linea_upper = linea.upper()
         if "%" in linea_upper or "IVA" in linea_upper:
             return []
@@ -432,9 +470,11 @@ class TicketParser:
         return precios
 
     def _lineas_a_texto(self, texto_ocr: str) -> List[str]:
+        """Normaliza texto OCR a lista de líneas sin vacíos."""
         return [re.sub(r"\s+", " ", l).strip() for l in texto_ocr.splitlines() if l.strip()]
 
     def _normalizar_fecha_iso(self, valor: Optional[str]) -> str:
+        """Convierte fecha libre detectada a ISO-8601 minutos."""
         if not valor:
             return ""
         valor = valor.strip()
@@ -461,6 +501,7 @@ class TicketParser:
         return ""
 
     def _extraer_cif(self, lineas: List[str]) -> str:
+        """Extrae CIF/NIF fiscal si aparece en cabecera."""
         patrones = [
             r"\b([A-Z]\d{8})\b",
             r"\b(\d{8}[A-Z])\b",
@@ -474,6 +515,7 @@ class TicketParser:
         return ""
 
     def _extraer_telefono(self, lineas: List[str]) -> str:
+        """Extrae teléfono español normalizando a dígitos."""
         for linea in lineas[:25]:
             match = re.search(r"(?:\+34\s*)?(\d(?:[\s.-]?\d){8})", linea)
             if match:
@@ -481,6 +523,7 @@ class TicketParser:
         return ""
 
     def _extraer_op(self, lineas: List[str]) -> str:
+        """Extrae código OP (operación/caja) si existe."""
         for linea in lineas:
             match = re.search(r"\bOP\s*[:\-]?\s*([A-Z0-9]+)\b", linea.upper())
             if match:
@@ -488,6 +531,7 @@ class TicketParser:
         return ""
 
     def _extraer_ticket_id(self, lineas: List[str]) -> str:
+        """Extrae identificador de ticket/factura."""
         patrones = [
             r"\b(?:TICKET|FACTURA)\s*(?:N[Oº°]\s*)?[:\-]?\s*([A-Z0-9\-]{4,})\b",
             r"\bN[Oº°]\s*[:\-]?\s*([A-Z0-9\-]{5,})\b",
@@ -501,6 +545,7 @@ class TicketParser:
         return ""
 
     def _extraer_address_postal(self, lineas: List[str]) -> tuple[str, str]:
+        """Busca dirección y línea postal en cabecera."""
         address = ""
         postal_city = ""
         for linea in lineas[:25]:
@@ -513,6 +558,7 @@ class TicketParser:
         return address, postal_city
 
     def _extraer_iva(self, lineas: List[str]) -> List[Dict[str, float]]:
+        """Extrae desglose IVA con rate/base/cuota."""
         resultados: List[Dict[str, float]] = []
         for linea in lineas:
             linea_upper = linea.upper()
@@ -544,25 +590,34 @@ class TicketParser:
         return resultados
 
     def _extraer_pagos(self, lineas: List[str]) -> List[Dict[str, Any]]:
+        """Extrae pagos con método e importe desde sección de cobro."""
         pagos: List[Dict[str, Any]] = []
         for linea in lineas:
             if not self._es_linea_pago(linea):
                 continue
             precios = self._extraer_precios(linea)
-            metodo = ""
-            linea_upper = linea.upper()
-            if "EFECT" in linea_upper:
-                metodo = "EFECTIVO"
-            elif any(k in linea_upper for k in ["TARJETA", "TARGETA", "VISA", "MASTERCARD", "MAESTRO"]):
-                metodo = "TARJETA"
+            metodo = self._inferir_metodo_pago(linea)
             if metodo and precios:
                 pagos.append({"method": metodo, "amount": round(max(precios), 2)})
         return pagos
 
+    def _inferir_metodo_pago(self, linea: str) -> str:
+        linea_upper = linea.upper()
+        if "EFECT" in linea_upper:
+            return "EFECTIVO"
+        if any(k in linea_upper for k in ["TARJETA", "TARGETA", "VISA", "MASTERCARD", "MAESTRO"]):
+            return "TARJETA"
+        return ""
+
     def _ajustar_total_con_iva(
         self, total: Optional[float], iva: List[Dict[str, float]]
     ) -> Optional[float]:
-        """Ajusta total para cliente final si se detecta total sin IVA."""
+        """Ajusta total cuando OCR captura base imponible en lugar de total final.
+
+        Mala práctica corregida:
+        devolver números sin normalizar producía salidas inconsistentes.
+        Aquí siempre devolvemos redondeo homogéneo a 2 decimales.
+        """
         if not iva:
             return round(total, 2) if total is not None else None
 
@@ -580,86 +635,27 @@ class TicketParser:
             return total_con_iva
         return total_redondeado
 
-    # Extrae lista de productos agrupando nombres y precios.
     def extraer_productos(self, lineas: List[str]) -> List[Producto]:
-        """Devuelve productos extraidos linea a linea con sus precios."""
+        """Extrae productos recorriendo la zona útil del ticket.
+
+        Flujo:
+        1) detectar inicio/fin del bloque de líneas de compra,
+        2) acumular nombre en buffer hasta encontrar precio,
+        3) guardar producto cuando se completa el par nombre+precio.
+        """
         productos: List[Producto] = []
+        inicio = self._detectar_inicio_productos(lineas)
+        fin = self._detectar_fin_productos(lineas, inicio)
 
-        # --- Detectar inicio de la zona de productos ---
-        inicio = 0
-        for i, linea in enumerate(lineas):
-            linea_upper = linea.upper()
-            # Cabeceras de tabla (espanol y catalan)
-            if any(k in linea_upper for k in ["DESCRIP", "P.V.P", "PVP", "P.UNIT"]):
-                contexto = " ".join(lineas[max(0, i - 2) : i + 6]).upper()
-                if any(
-                    k in contexto
-                    for k in [
-                        "CANT",
-                        "PRODUCTO",
-                        "TOTAL",
-                        "UNITARIO",
-                        "P.UNIT",
-                        "IMPORT",
-                    ]
-                ):
-                    inicio = i + 1
-                    while inicio < len(lineas) and self._es_linea_header(
-                        lineas[inicio]
-                    ):
-                        inicio += 1
-                    break
-            # Marcadores de fin de cabecera (catalan: OP, CAIXA)
-            if re.search(r"\bOP:\s*\d", linea_upper) or re.search(
-                r"\bCAIXA\s*:\s*\d", linea_upper
-            ):
-                inicio = i + 1
-                break
-
-        # --- Detectar fin de la zona de productos ---
-        fin = len(lineas)
-        for i in range(max(inicio, int(len(lineas) * 0.3)), len(lineas)):
-            linea_upper = lineas[i].upper().replace(" ", "")
-            # Espanol: resumen IVA
-            if "TIPOIVA" in linea_upper and "BASEIMPONIBLE" in " ".join(
-                lineas[i : i + 3]
-            ).upper().replace(" ", ""):
-                fin = i
-                break
-            # Catalan: desglose IVA
-            if "DESGLOSSAMENT" in linea_upper or "DESGLOSAMENT" in linea_upper:
-                fin = i
-                break
-            # TOTAL standalone (linea que empieza por TOTAL)
-            if re.match(r"^\s*TOTAL\b", lineas[i], re.IGNORECASE):
-                fin = i
-                break
-            # Seccion de pago
-            if self._es_linea_pago(lineas[i]):
-                fin = i
-                break
-            # Catalan: ARTICLES: N
-            if re.match(r"^\s*ARTICLES\s*:", lineas[i], re.IGNORECASE):
-                fin = i
-                break
-
-        # --- Extraer productos linea a linea ---
         nombre_buffer: List[str] = []
         precio_actual: Optional[float] = None
 
-        def _guardar():
+        def guardar_producto_si_completo() -> None:
             nonlocal nombre_buffer, precio_actual
             if nombre_buffer and precio_actual is not None and precio_actual > 0:
-                nombre = " ".join(nombre_buffer).strip()
-                # Limpiar cantidad al inicio (ej: "2 BIFIDUS" -> "BIFIDUS")
-                nombre_sin_cantidad = re.sub(r"^\d+\s+", "", nombre)
-                if len(nombre_sin_cantidad) >= 3:
-                    nombre = nombre_sin_cantidad
-                nombre = nombre.upper()
-                if len(nombre) >= 3:
-                    productos.append(
-                        Producto(nombre=nombre, precio_total=precio_actual)
-                    )
+                nombre_final = self._limpiar_nombre_producto(" ".join(nombre_buffer))
+                if len(nombre_final) >= 3:
+                    productos.append(Producto(nombre=nombre_final, precio_total=precio_actual))
             nombre_buffer = []
             precio_actual = None
 
@@ -668,31 +664,26 @@ class TicketParser:
             if not linea_limpia:
                 continue
 
-            # Saltar lineas que no son productos
             if self._es_linea_descartar(linea_limpia):
-                _guardar()
+                guardar_producto_si_completo()
                 continue
             if self._es_linea_header(linea_limpia):
-                _guardar()
+                guardar_producto_si_completo()
                 continue
             if self._es_linea_pago(linea_limpia):
-                _guardar()
+                guardar_producto_si_completo()
                 continue
             if self._es_linea_direccion(linea_limpia):
-                _guardar()
+                guardar_producto_si_completo()
                 continue
 
-            # Comprobar precios en esta linea
             precios = self._extraer_precios(linea_limpia)
 
             if precios:
                 positivos = [p for p in precios if p > 0]
                 precio = max(positivos) if positivos else None
-
-                # Extraer parte de texto (nombre) quitando los numeros decimales
                 nombre_parte = re.sub(r"-?\d+[.,]\d{2}", "", linea_limpia)
                 nombre_parte = re.sub(r"\s+", " ", nombre_parte).strip()
-                # Limpiar numeros sueltos y puntuacion al inicio/final
                 nombre_parte = re.sub(
                     r"^[\s\d.,*×xX-]+\s*|\s*[\s\d.,*×xX-]+$", "", nombre_parte
                 ).strip()
@@ -702,43 +693,81 @@ class TicketParser:
                     and len(nombre_parte) >= 3
                     and self._tiene_letras(nombre_parte)
                 ):
-                    # Linea con nombre + precio: guardar anterior y crear nuevo
                     if nombre_buffer and precio_actual is not None:
-                        _guardar()
+                        guardar_producto_si_completo()
                     if nombre_buffer:
                         nombre_buffer.append(nombre_parte)
                     else:
                         nombre_buffer = [nombre_parte]
                     precio_actual = precio
-                    _guardar()
+                    guardar_producto_si_completo()
                 else:
-                    # Linea solo con precio(s)
                     if nombre_buffer:
                         precio_actual = precio
-                        _guardar()
-                    # Si no hay nombre en buffer, precio huerfano -> ignorar
+                        guardar_producto_si_completo()
             else:
-                # Linea sin precio (solo texto)
                 if self._es_linea_codigo(linea_limpia):
                     continue
                 if not self._es_linea_candidata_producto(linea_limpia):
-                    _guardar()
+                    guardar_producto_si_completo()
                     continue
 
-                # Si ya teniamos nombre + precio, guardar primero
                 if nombre_buffer and precio_actual is not None:
-                    _guardar()
+                    guardar_producto_si_completo()
 
                 nombre_buffer.append(linea_limpia)
 
-        _guardar()
+        guardar_producto_si_completo()
         return productos
 
-    # Elimina falsos positivos comparando con el nombre del comercio.
+    def _detectar_inicio_productos(self, lineas: List[str]) -> int:
+        """Calcula dónde empieza la sección de productos."""
+        for indice, linea in enumerate(lineas):
+            linea_upper = linea.upper()
+            if any(k in linea_upper for k in ["DESCRIP", "P.V.P", "PVP", "P.UNIT"]):
+                contexto = " ".join(lineas[max(0, indice - 2) : indice + 6]).upper()
+                if any(
+                    k in contexto
+                    for k in ["CANT", "PRODUCTO", "TOTAL", "UNITARIO", "P.UNIT", "IMPORT"]
+                ):
+                    inicio = indice + 1
+                    while inicio < len(lineas) and self._es_linea_header(lineas[inicio]):
+                        inicio += 1
+                    return inicio
+            if re.search(r"\bOP:\s*\d", linea_upper) or re.search(r"\bCAIXA\s*:\s*\d", linea_upper):
+                return indice + 1
+        return 0
+
+    def _detectar_fin_productos(self, lineas: List[str], inicio: int) -> int:
+        """Calcula dónde termina la sección de productos."""
+        for indice in range(max(inicio, int(len(lineas) * 0.3)), len(lineas)):
+            linea_compacta = lineas[indice].upper().replace(" ", "")
+            if "TIPOIVA" in linea_compacta and "BASEIMPONIBLE" in " ".join(
+                lineas[indice : indice + 3]
+            ).upper().replace(" ", ""):
+                return indice
+            if "DESGLOSSAMENT" in linea_compacta or "DESGLOSAMENT" in linea_compacta:
+                return indice
+            if re.match(r"^\s*TOTAL\b", lineas[indice], re.IGNORECASE):
+                return indice
+            if self._es_linea_pago(lineas[indice]):
+                return indice
+            if re.match(r"^\s*ARTICLES\s*:", lineas[indice], re.IGNORECASE):
+                return indice
+        return len(lineas)
+
+    def _limpiar_nombre_producto(self, nombre_crudo: str) -> str:
+        """Limpia prefijos de cantidad y estandariza nombre del producto."""
+        nombre = nombre_crudo.strip()
+        nombre_sin_cantidad = re.sub(r"^\d+\s+", "", nombre)
+        if len(nombre_sin_cantidad) >= 3:
+            nombre = nombre_sin_cantidad
+        return nombre.upper()
+
     def filtrar_productos_por_comercio(
         self, productos: List[Producto], comercio: Optional[str]
     ) -> List[Producto]:
-        """Limpia productos que se parecen al nombre del comercio."""
+        """Elimina falsos positivos similares al nombre del comercio."""
         if not comercio:
             return productos
         comercio_norm = re.sub(r"[^A-Za-zÀ-ÿ\s]", "", comercio).upper().strip()
@@ -788,9 +817,12 @@ class TicketParser:
                 filtrados.append(producto)
         return filtrados
 
-    # Parseo completo: comercio, fecha, productos, total.
     def parsear(self, lineas: List[str]) -> Dict[str, object]:
-        """Parsea lineas OCR y devuelve datos estructurados."""
+        """Orquesta parseo completo del ticket OCR.
+
+        Diseño: este método coordina, no implementa detalles.
+        Cada extracción vive en helpers con responsabilidad única.
+        """
         texto_completo = "\n".join(lineas)
         comercio = self.extraer_comercio(lineas)
         fecha_raw = self.extraer_fecha_y_hora_por_contexto(lineas) or self.extraer_fecha(
@@ -833,12 +865,14 @@ class TicketParser:
 
 
 def _safe_tsv(texto: Any) -> str:
+    """Evita romper formato TSV por saltos de línea o tabuladores."""
     if texto is None:
         return ""
     return str(texto).replace("\t", " ").replace("\n", " ").strip()
 
 
 def _fmt_num(valor: Any, decimales: int = 2) -> str:
+    """Formatea números de salida respetando campos opcionales."""
     if valor is None or valor == "":
         return ""
     if isinstance(valor, (float, int)):
@@ -848,8 +882,8 @@ def _fmt_num(valor: Any, decimales: int = 2) -> str:
 
 def export_tsv(ticket_obj: Dict[str, Any]) -> str:
     """Exporta un ticket parseado al contrato TSV fijo v1."""
-    lineas: List[str] = ["VER\t1"]
-    lineas.append(
+    lineas_tsv: List[str] = ["VER\t1"]
+    lineas_tsv.append(
         "\t".join(
             [
                 "H",
@@ -867,53 +901,53 @@ def export_tsv(ticket_obj: Dict[str, Any]) -> str:
     )
 
     for producto in ticket_obj.get("productos", []):
-        qty = getattr(producto, "cantidad", None)
-        line_total = getattr(producto, "precio_total", None)
-        unit_price = None
-        if qty and line_total:
+        cantidad = getattr(producto, "cantidad", None)
+        total_linea = getattr(producto, "precio_total", None)
+        precio_unitario = None
+        if cantidad and total_linea:
             try:
-                unit_price = float(line_total) / float(qty)
+                precio_unitario = float(total_linea) / float(cantidad)
             except (ValueError, ZeroDivisionError):
-                unit_price = None
-        lineas.append(
+                precio_unitario = None
+        lineas_tsv.append(
             "\t".join(
                 [
                     "L",
                     _safe_tsv(getattr(producto, "nombre", "")),
-                    _fmt_num(qty, decimales=3),
-                    _fmt_num(unit_price),
-                    _fmt_num(line_total),
+                    _fmt_num(cantidad, decimales=3),
+                    _fmt_num(precio_unitario),
+                    _fmt_num(total_linea),
                     "",
                 ]
             )
         )
 
     total = ticket_obj.get("total")
-    lineas.append(f"T\t{_fmt_num(total)}")
+    lineas_tsv.append(f"T\t{_fmt_num(total)}")
 
-    for iva in ticket_obj.get("iva", []):
-        lineas.append(
+    for iva_item in ticket_obj.get("iva", []):
+        lineas_tsv.append(
             "\t".join(
                 [
                     "V",
-                    _fmt_num(iva.get("rate")),
-                    _fmt_num(iva.get("base")),
-                    _fmt_num(iva.get("amount")),
+                    _fmt_num(iva_item.get("rate")),
+                    _fmt_num(iva_item.get("base")),
+                    _fmt_num(iva_item.get("amount")),
                 ]
             )
         )
 
-    for pago in ticket_obj.get("payments", []):
-        lineas.append(
+    for pago_item in ticket_obj.get("payments", []):
+        lineas_tsv.append(
             "\t".join(
                 [
                     "P",
-                    _safe_tsv(pago.get("method", "")),
-                    _fmt_num(pago.get("amount")),
+                    _safe_tsv(pago_item.get("method", "")),
+                    _fmt_num(pago_item.get("amount")),
                 ]
             )
         )
-    return "\n".join(lineas)
+    return "\n".join(lineas_tsv)
 
 
 def export_productos_json(ticket_obj: Dict[str, Any]) -> str:

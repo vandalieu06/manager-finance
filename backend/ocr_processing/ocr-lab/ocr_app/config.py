@@ -12,10 +12,6 @@ class OCRConfig:
     umbral_min_confianza: float = 0.25
     lenguajes_ocr: List[str] = None
     usa_gpu: bool = False
-
-    # Debug
-    prefijo_debug_preprocesado: str = "debug_metodo_"
-
     # Preprocesado
     escalado_fuerte: float = 4.0
     escalado_medio: float = 3.5

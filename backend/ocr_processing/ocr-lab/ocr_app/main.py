@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import os
+import argparse
 import sys
+from typing import Union
 
 import cv2
 
 from .config import OCRConfig
 from .ocr_engine import OCREngine
-from .parsing import TicketParser
+from .parsing import TicketParser, export_productos_json, export_tsv
 
 
 def imprimir_resultados(datos: dict) -> None:
@@ -31,39 +32,50 @@ def imprimir_resultados(datos: dict) -> None:
     print(f"  Lineas OCR: {datos['num_lineas']}")
 
 
-def main(argv: list[str]) -> dict:
+def _parsear_argumentos(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="OCR + parsing de tickets/facturas.")
+    parser.add_argument(
+        "ruta_imagen",
+        nargs="?",
+        default="amazon.jpg",
+        help="Ruta de la factura/ticket a procesar.",
+    )
+    parser.add_argument(
+        "--formato",
+        choices=["dict", "tsv", "productos-json"],
+        default="dict",
+        help="Formato de salida del parseo.",
+    )
+    return parser.parse_args(argv[1:])
+
+
+def main(argv: list[str]) -> Union[dict, str]:
     # Punto de entrada principal para ejecutar OCR + parsing.
     """Ejecuta el flujo completo OCR + parsing desde CLI."""
-    ruta_imagen = argv[1] if len(argv) > 1 else "amazon.jpg"
-    config = OCRConfig(ruta_imagen=ruta_imagen)
-
-    print("=" * 60)
-    print("OCR MEJORADO PARA TICKETS")
-    print("=" * 60)
-    print(f"CWD: {os.getcwd()}")
-    print(f"Leyendo: {os.path.abspath(config.ruta_imagen)}")
+    argumentos = _parsear_argumentos(argv)
+    config = OCRConfig(ruta_imagen=argumentos.ruta_imagen)
 
     imagen_original = cv2.imread(config.ruta_imagen)
     if imagen_original is None:
         raise RuntimeError("❌ No se pudo cargar la imagen. Revisa la ruta.")
 
-    print(f"Tamano original: {imagen_original.shape}")
-
     ocr = OCREngine(config)
     lineas_detectadas = ocr.ejecutar(imagen_original)
 
-    print("\n" + "=" * 60)
-    print("TEXTO DETECTADO")
-    print("=" * 60)
-    for indice, linea in enumerate(lineas_detectadas, 1):
-        print(f"{indice:3d}. {linea}")
-
     parser = TicketParser()
     datos = parser.parsear(lineas_detectadas)
-    imprimir_resultados(datos)
 
-    if not datos["total"]:
-        print("\n⚠️  No se pudo extraer el total. Revisa manualmente el texto detectado.")
+    if argumentos.formato == "tsv":
+        salida_tsv = export_tsv(datos)
+        print(salida_tsv)
+        return salida_tsv
+
+    if argumentos.formato == "productos-json":
+        salida_json = export_productos_json(datos)
+        print(salida_json)
+        return salida_json
+
+    imprimir_resultados(datos)
 
     return datos
 

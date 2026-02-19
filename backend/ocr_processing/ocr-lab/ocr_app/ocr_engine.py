@@ -11,6 +11,7 @@ from .preprocess import Preprocessor
 
 class OCREngine:
     """Orquesta preprocesado y OCR multi-estrategia."""
+
     # Inicializa el motor OCR con preprocesado y lector.
     def __init__(self, config: OCRConfig) -> None:
         """Crea el motor OCR y carga el lector una sola vez."""
@@ -23,7 +24,6 @@ class OCREngine:
         self, imagen_preprocesada, nombre_estrategia: str
     ) -> List[Tuple[str, float]]:
         """Devuelve lineas y confianza para una estrategia concreta."""
-        print(f"\n>>> Probando {nombre_estrategia}...")
         resultados_ocr = self.lector.readtext(
             imagen_preprocesada,
             detail=1,
@@ -42,13 +42,12 @@ class OCREngine:
                 lineas_filtradas_con_confianza.append(
                     (texto_normalizado, float(confianza))
                 )
-        print(
-            f"    -> Detectadas {len(lineas_filtradas_con_confianza)} lineas con confianza >= {self.config.umbral_min_confianza}"
-        )
         return lineas_filtradas_con_confianza
 
     # Calcula puntuacion combinada por cantidad y confianza.
-    def _puntuacion(self, resultado_metodo: Tuple[str, List[Tuple[str, float]]]) -> float:
+    def _puntuacion(
+        self, resultado_metodo: Tuple[str, List[Tuple[str, float]]]
+    ) -> float:
         """Calcula una puntuacion para elegir la mejor estrategia."""
         _, lineas_con_confianza = resultado_metodo
         if not lineas_con_confianza:
@@ -66,9 +65,6 @@ class OCREngine:
         self, versiones_preprocesadas: List[Tuple[str, object]]
     ) -> List[str]:
         """Reintenta OCR con paragraph=True si el texto es muy pobre."""
-        print(
-            "\n⚠️  Solo se detectaron caracteres sueltos. Reintentando con paragraph=True..."
-        )
         _, imagen_con_mejor_nitidez = max(
             versiones_preprocesadas, key=lambda x: cv2.Laplacian(x[1], cv2.CV_64F).var()
         )
@@ -79,6 +75,7 @@ class OCREngine:
             decoder="beamsearch",
         )
         lineas_detectadas: List[str] = []
+
         for bloque_resultado in resultados_ocr:
             if len(bloque_resultado) == 3:
                 _, texto_detectado, confianza = bloque_resultado
@@ -99,31 +96,23 @@ class OCREngine:
     def ejecutar(self, imagen_bgr) -> List[str]:
         """Ejecuta OCR con varias estrategias y retorna el mejor texto."""
         versiones_preprocesadas = self.preprocessor.construir_versiones(imagen_bgr)
-        for indice_version, (_, imagen_version) in enumerate(
-            versiones_preprocesadas, start=1
-        ):
-            cv2.imwrite(
-                f"{self.config.prefijo_debug_preprocesado}{indice_version}.png",
-                imagen_version,
-            )
-
-        print("\n=== PROBANDO MULTIPLES ESTRATEGIAS DE OCR ===")
 
         resultados_por_estrategia: List[Tuple[str, List[Tuple[str, float]]]] = []
         for nombre_estrategia, imagen_preprocesada in versiones_preprocesadas:
-            lineas_extraidas = self._ejecutar_ocr(imagen_preprocesada, nombre_estrategia)
+            lineas_extraidas = self._ejecutar_ocr(
+                imagen_preprocesada, nombre_estrategia
+            )
             resultados_por_estrategia.append((nombre_estrategia, lineas_extraidas))
 
         mejor_estrategia, lineas_mejor_estrategia = max(
             resultados_por_estrategia, key=self._puntuacion
-        )
-        print(
-            f"\n✓ MEJOR METODO: {mejor_estrategia} ({len(lineas_mejor_estrategia)} lineas)"
         )
 
         lineas_texto_finales = [texto for texto, _ in lineas_mejor_estrategia]
         if lineas_texto_finales and all(
             len(linea) <= 3 for linea in lineas_texto_finales
         ):
-            lineas_texto_finales = self._reintentar_con_paragraph(versiones_preprocesadas)
+            lineas_texto_finales = self._reintentar_con_paragraph(
+                versiones_preprocesadas
+            )
         return lineas_texto_finales
