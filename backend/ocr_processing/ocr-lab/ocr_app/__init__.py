@@ -10,8 +10,9 @@ from .parsing import (
 
 try:
     from .ocr import OCREngine
-except ModuleNotFoundError:  # pragma: no cover - entorno sin dependencias OCR opcionales
-    OCREngine = None  # type: ignore[assignment]
+except ModuleNotFoundError:
+    # pragma: no cover - entorno sin dependencias OCR opcionales
+    OCREngine = None
 
 __all__ = [
     "OCRConfig",

@@ -1,99 +1,30 @@
 import json
 
-from .parser.date_extractor import DateExtractor
-from .parser.line_classifier import LineClassifier
-from .parser.metadata_extractor import MetadataExtractor
-from .parser.price_extractor import PriceExtractor
 from .parser.constants import KNOWN_STORES
-from .parser.store_extractor import StoreExtractor
 from .parser.text_utils import (
     format_numeric_field,
-    normalize_number,
     normalize_ocr_lines,
     sanitize_tsv_field,
 )
 from .parser.ticket_parser_refactored import TicketParserRefactored
-from .parser.total_extractor import TotalExtractor
 
 
 class TicketParser:
-    """Fachada compatible con la API anterior basada en componentes SRP."""
+    """Fachada ligera para parsear lineas OCR en un ticket estructurado."""
 
     def __init__(self):
         self.refactored_parser = TicketParserRefactored()
-        self.date_extractor = self.refactored_parser.date_extractor
-        self.total_extractor = self.refactored_parser.total_extractor
-        self.store_extractor = self.refactored_parser.store_extractor
-        self.product_extractor = self.refactored_parser.product_extractor
-        self.product_filter = self.refactored_parser.product_filter
-        self.metadata_extractor = self.refactored_parser.metadata_extractor
-
-    def normalizar_numero(self, raw_number_text):
-        return normalize_number(raw_number_text)
-
-    def extraer_fecha(self, raw_text):
-        return self.date_extractor.extract_date(raw_text)
-
-    def extraer_fecha_y_hora_por_contexto(self, ocr_lines):
-        return self.date_extractor.extract_datetime_by_context(ocr_lines)
-
-    def extraer_total_por_contexto(self, ocr_lines):
-        return self.total_extractor.extract(ocr_lines)
-
-    def extraer_comercio(self, ocr_lines):
-        return self.store_extractor.extract(ocr_lines)
-
-    def extraer_productos(self, ocr_lines):
-        return self.product_extractor.extract(ocr_lines)
-
-    def filtrar_productos_por_comercio(self, extracted_products, detected_store):
-        return self.product_filter.filter_by_store(extracted_products, detected_store)
 
     def parsear(self, ocr_lines):
+        """Parsea lineas OCR ya normalizadas."""
         return self.refactored_parser.parse_lines(ocr_lines)
 
-    def _lineas_a_texto(self, raw_ocr_text):
-        return normalize_ocr_lines(raw_ocr_text)
-
-    def _normalizar_fecha_iso(self, raw_date_value):
-        return self.date_extractor.normalize_iso_datetime(raw_date_value)
-
-    def _extraer_cif(self, ocr_lines):
-        return self.metadata_extractor.extract_cif(ocr_lines)
-
-    def _extraer_telefono(self, ocr_lines):
-        return self.metadata_extractor.extract_phone(ocr_lines)
-
-    def _extraer_op(self, ocr_lines):
-        return self.metadata_extractor.extract_op(ocr_lines)
-
-    def _extraer_ticket_id(self, ocr_lines):
-        return self.metadata_extractor.extract_ticket_id(ocr_lines)
-
-    def _extraer_address_postal(self, ocr_lines):
-        return self.metadata_extractor.extract_address_postal(ocr_lines)
-
-    def _extraer_iva(self, ocr_lines):
-        return self.metadata_extractor.extract_vat(ocr_lines)
-
-    def _extraer_pagos(self, ocr_lines):
-        return self.metadata_extractor.extract_payments(ocr_lines)
-
-    def _ajustar_total_con_iva(self, extracted_total, extracted_vat_rows):
-        return self.metadata_extractor.adjust_total_with_vat(
-            extracted_total, extracted_vat_rows
-        )
-
-    def parsear_a_tsv(self, raw_ocr_text):
-        parsed_ticket = self.parsear(self._lineas_a_texto(raw_ocr_text))
-        return export_tsv(parsed_ticket)
-
-    def parsear_a_productos_json(self, raw_ocr_text):
-        parsed_ticket = self.parsear(self._lineas_a_texto(raw_ocr_text))
-        return export_productos_json(parsed_ticket)
+    # TODO_REMOVE_COMPAT: wrapper de compatibilidad temporal para OCR crudo.
+    def parsear_texto_crudo(self, raw_ocr_text: str):
+        return self.parsear(normalize_ocr_lines(raw_ocr_text))
 
 
-def export_tsv(parsed_ticket):
+def export_tsv(parsed_ticket: dict) -> str:
     """Exporta un ticket parseado al contrato TSV fijo v1."""
     output_tsv_lines = ["VER\t1"]
     output_tsv_lines.append(
@@ -167,9 +98,9 @@ def export_tsv(parsed_ticket):
     return "\n".join(output_tsv_lines)
 
 
-def export_productos_json(parsed_ticket):
+def export_productos_json(parsed_ticket: dict) -> str:
     """Exporta solo productos fisicos como JSON compacto [{name, price}]."""
-    output_json_products = []
+    output_json_products: list[dict[str, float | str]] = []
 
     for extracted_product in parsed_ticket.get("productos", []):
         product_name = sanitize_tsv_field(getattr(extracted_product, "nombre", ""))
@@ -185,25 +116,24 @@ def export_productos_json(parsed_ticket):
     return json.dumps(output_json_products, ensure_ascii=False, separators=(",", ":"))
 
 
-def parsear_a_tsv(raw_ocr_text):
+def _parsear_desde_texto(raw_ocr_text: str) -> dict:
+    parsed_lines = normalize_ocr_lines(raw_ocr_text)
+    return TicketParser().parsear(parsed_lines)
+
+
+def parsear_a_tsv(raw_ocr_text: str) -> str:
     """Funcion publica para parsear OCR crudo y devolver TSV v1."""
-    return TicketParser().parsear_a_tsv(raw_ocr_text)
+    return export_tsv(_parsear_desde_texto(raw_ocr_text))
 
 
-def parsear_a_productos_json(raw_ocr_text):
+def parsear_a_productos_json(raw_ocr_text: str) -> str:
     """Funcion publica para parsear OCR crudo a JSON [{name, price}]."""
-    return TicketParser().parsear_a_productos_json(raw_ocr_text)
+    return export_productos_json(_parsear_desde_texto(raw_ocr_text))
 
 
 __all__ = [
     "TicketParser",
     "KNOWN_STORES",
-    "LineClassifier",
-    "PriceExtractor",
-    "StoreExtractor",
-    "TotalExtractor",
-    "MetadataExtractor",
-    "DateExtractor",
     "parsear_a_tsv",
     "parsear_a_productos_json",
     "export_tsv",

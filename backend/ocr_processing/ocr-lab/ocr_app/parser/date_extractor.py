@@ -5,59 +5,72 @@ from datetime import datetime
 class DateExtractor:
     """Extrae fecha/hora del ticket con heuristicas tolerantes a OCR."""
 
-    def extract_date(self, source_text):
-        date_patterns = [
+    def extract_date(self, texto_crudo):
+        patrones_fecha_regex = [
             r"\b(\d{2}[-/\.]\d{2}[-/\.]\d{2,4})\b",
             r"\b(\d{1,2}\s+(?:ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[A-Z]*\s+\d{2,4})\b",
             r"\b(\d{4}-\d{2})\b",
             r"\b(\d{2})(\d{2})(\d{2,4})\b",
         ]
 
-        for date_pattern in date_patterns[:2]:
-            matched_date = re.search(date_pattern, source_text, re.IGNORECASE)
-            if matched_date:
-                return matched_date.group(1)
+        for patron_fecha in patrones_fecha_regex[:2]:
+            coincidencia_fecha = re.search(patron_fecha, texto_crudo, re.IGNORECASE)
+            if coincidencia_fecha:
+                return coincidencia_fecha.group(1)
 
-        matched_yyyy_mm = re.search(date_patterns[2], source_text)
-        if matched_yyyy_mm:
-            extracted_date_text = matched_yyyy_mm.group(1)
-            if len(extracted_date_text) >= 5:
-                return f"{extracted_date_text[:2]}-{extracted_date_text[2:4]}-{extracted_date_text[5:]}"
-            return extracted_date_text
+        coincidencia_ano_mes = re.search(patrones_fecha_regex[2], texto_crudo)
+        if coincidencia_ano_mes:
+            texto_fecha_detectado = coincidencia_ano_mes.group(1)
+            if len(texto_fecha_detectado) >= 5:
+                return (
+                    f"{texto_fecha_detectado[:2]}-"
+                    f"{texto_fecha_detectado[2:4]}-"
+                    f"{texto_fecha_detectado[5:]}"
+                )
+            return texto_fecha_detectado
         return None
 
     def extract_datetime_by_context(self, ocr_lines):
-        prioritized_keyword_groups = [
+        grupos_keywords_priorizados = [
             ["FECHA DE FACTURA", "FECHA DE COMPRA", "FECHA FACTURA"],
             ["FECHA DE PAGO", "FECHA PAGO", "FECHA DE ENTREGA"],
             ["DATA", "TICKET", "FECHA", "HORA"],
         ]
 
-        for keyword_group in prioritized_keyword_groups:
-            for line_index, line_text in enumerate(ocr_lines):
-                if not any(keyword in line_text.upper() for keyword in keyword_group):
+        for keywords_de_contexto in grupos_keywords_priorizados:
+            for indice_linea_contexto, texto_linea_contexto in enumerate(ocr_lines):
+                if not any(
+                    keyword_contexto in texto_linea_contexto.upper()
+                    for keyword_contexto in keywords_de_contexto
+                ):
                     continue
 
-                nearby_context_text = " ".join(ocr_lines[line_index : line_index + 6])
-                extracted_date_value = self.extract_date(nearby_context_text)
-                matched_hour = re.search(r"\b(\d{1,2}:\d{2})\b", nearby_context_text)
+                texto_ventana_contexto = " ".join(
+                    ocr_lines[indice_linea_contexto : indice_linea_contexto + 6]
+                )
+                fecha_detectada = self.extract_date(texto_ventana_contexto)
+                coincidencia_hora = re.search(
+                    r"\b(\d{1,2}:\d{2})\b", texto_ventana_contexto
+                )
 
-                if extracted_date_value and matched_hour:
-                    return f"{extracted_date_value} {matched_hour.group(1)}"
-                if extracted_date_value:
-                    return extracted_date_value
+                if fecha_detectada and coincidencia_hora:
+                    return f"{fecha_detectada} {coincidencia_hora.group(1)}"
+                if fecha_detectada:
+                    return fecha_detectada
 
-                matched_short_date = re.search(r"\b(\d{2}[-/\.]\d{2})\b", nearby_context_text)
-                if matched_short_date:
-                    return matched_short_date.group(1)
+                coincidencia_fecha_corta = re.search(
+                    r"\b(\d{2}[-/\.]\d{2})\b", texto_ventana_contexto
+                )
+                if coincidencia_fecha_corta:
+                    return coincidencia_fecha_corta.group(1)
 
         return None
 
-    def normalize_iso_datetime(self, raw_date_value):
-        if not raw_date_value:
+    def normalize_iso_datetime(self, texto_fecha_hora_crudo):
+        if not texto_fecha_hora_crudo:
             return ""
 
-        accepted_input_formats = [
+        formatos_fecha_hora_aceptados = [
             "%d/%m/%Y %H:%M",
             "%d-%m-%Y %H:%M",
             "%d.%m.%Y %H:%M",
@@ -72,10 +85,12 @@ class DateExtractor:
             "%d.%m.%y",
         ]
 
-        for input_format in accepted_input_formats:
+        for formato_fecha_hora in formatos_fecha_hora_aceptados:
             try:
-                parsed_datetime = datetime.strptime(raw_date_value.strip(), input_format)
-                return parsed_datetime.isoformat(timespec="minutes")
+                fecha_hora_parseada = datetime.strptime(
+                    texto_fecha_hora_crudo.strip(), formato_fecha_hora
+                )
+                return fecha_hora_parseada.isoformat(timespec="minutes")
             except ValueError:
                 continue
         return ""

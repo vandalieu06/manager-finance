@@ -27,44 +27,48 @@ class TicketParserRefactored:
         )
 
     def parse_lines(self, ocr_lines):
-        full_ocr_text = "\n".join(ocr_lines)
+        texto_ocr_completo = "\n".join(ocr_lines)
 
-        extracted_store = self.store_extractor.extract(ocr_lines)
-        extracted_raw_date = self.date_extractor.extract_datetime_by_context(
+        nombre_comercio_extraido = self.store_extractor.extract(ocr_lines)
+        fecha_hora_cruda_extraida = self.date_extractor.extract_datetime_by_context(
             ocr_lines
-        ) or self.date_extractor.extract_date(full_ocr_text)
+        ) or self.date_extractor.extract_date(texto_ocr_completo)
 
-        extracted_address, extracted_postal_city = self.metadata_extractor.extract_address_postal(
-            ocr_lines
+        linea_direccion_extraida, linea_postal_ciudad_extraida = (
+            self.metadata_extractor.extract_address_postal(ocr_lines)
         )
-        extracted_vat_rows = self.metadata_extractor.extract_vat(ocr_lines)
-        extracted_base_total = self.total_extractor.extract(ocr_lines)
-        extracted_products = self.product_extractor.extract(ocr_lines)
-        filtered_products = self.product_filter.filter_by_store(
-            extracted_products, extracted_store
+        filas_iva_extraidas = self.metadata_extractor.extract_vat(ocr_lines)
+        importe_total_base_extraido = self.total_extractor.extract(ocr_lines)
+        productos_extraidos = self.product_extractor.extract(ocr_lines)
+        productos_filtrados = self.product_filter.filter_by_store(
+            productos_extraidos, nombre_comercio_extraido
         )
 
         return {
-            "comercio": extracted_store,
-            "fecha": extracted_raw_date,
-            "datetime_iso": self.date_extractor.normalize_iso_datetime(extracted_raw_date),
-            "productos": filtered_products,
+            "comercio": nombre_comercio_extraido,
+            "fecha": fecha_hora_cruda_extraida,
+            "datetime_iso": self.date_extractor.normalize_iso_datetime(
+                fecha_hora_cruda_extraida
+            ),
+            "productos": productos_filtrados,
             "total": self.metadata_extractor.adjust_total_with_vat(
-                extracted_base_total, extracted_vat_rows
+                importe_total_base_extraido, filas_iva_extraidas
             ),
             "moneda": "EUR",
             "cif": self.metadata_extractor.extract_cif(ocr_lines),
-            "address": extracted_address,
-            "postal_city": extracted_postal_city,
+            "address": linea_direccion_extraida,
+            "postal_city": linea_postal_ciudad_extraida,
             "phone": self.metadata_extractor.extract_phone(ocr_lines),
             "op": self.metadata_extractor.extract_op(ocr_lines),
             "ticket_id": self.metadata_extractor.extract_ticket_id(ocr_lines),
-            "iva": extracted_vat_rows,
+            "iva": filas_iva_extraidas,
             "payments": self.metadata_extractor.extract_payments(ocr_lines),
-            "raw_text": full_ocr_text,
+            "raw_text": texto_ocr_completo,
             "num_lineas": len(ocr_lines),
         }
 
-    def parse_products(self, ocr_lines, detected_store=None):
-        extracted_products = self.product_extractor.extract(ocr_lines)
-        return self.product_filter.filter_by_store(extracted_products, detected_store)
+    def parse_products(self, ocr_lines, nombre_comercio_detectado=None):
+        productos_extraidos = self.product_extractor.extract(ocr_lines)
+        return self.product_filter.filter_by_store(
+            productos_extraidos, nombre_comercio_detectado
+        )

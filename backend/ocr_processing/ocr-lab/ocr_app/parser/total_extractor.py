@@ -8,69 +8,80 @@ class TotalExtractor:
         self.price_extractor_service = price_extractor_service
 
     def extract(self, ocr_lines):
-        total_candidates = self._find_total_candidates(ocr_lines)
-        if total_candidates:
-            total_candidates.sort(
-                key=lambda candidate_tuple: (candidate_tuple[0], candidate_tuple[2]),
+        candidatos_total_puntuados = self._find_total_candidates(ocr_lines)
+        if candidatos_total_puntuados:
+            candidatos_total_puntuados.sort(
+                key=lambda entrada_candidata: (entrada_candidata[0], entrada_candidata[2]),
                 reverse=True,
             )
-            return total_candidates[0][1]
+            return candidatos_total_puntuados[0][1]
         return self._find_largest_plausible_decimal(ocr_lines)
 
     def _find_total_candidates(self, ocr_lines):
-        total_candidates = []
+        candidatos_puntuados = []
 
-        for line_index, line_text in enumerate(ocr_lines):
-            upper_line_text = line_text.upper()
-            if not re.search(r"\b(TOTAL|TOTAI|A\s*PAGAR|IMPORTE\s*TOTAL)\b", upper_line_text):
+        for indice_linea_keyword, texto_linea_keyword in enumerate(ocr_lines):
+            texto_linea_mayus = texto_linea_keyword.upper()
+            if not re.search(
+                r"\b(TOTAL|TOTAI|A\s*PAGAR|IMPORTE\s*TOTAL)\b", texto_linea_mayus
+            ):
                 continue
 
-            compact_line_text = upper_line_text.replace(" ", "")
-            is_vat_total = "TOTALIVA" in compact_line_text or "CUOTAIVA" in compact_line_text
-            is_subtotal = "SUBTOTAL" in compact_line_text
-            line_text_letters_only = re.sub(r"[^A-Z]", "", upper_line_text)
-            is_standalone_total = line_text_letters_only in {
+            texto_linea_compacto = texto_linea_mayus.replace(" ", "")
+            es_linea_total_iva = (
+                "TOTALIVA" in texto_linea_compacto or "CUOTAIVA" in texto_linea_compacto
+            )
+            es_subtotal = "SUBTOTAL" in texto_linea_compacto
+            texto_linea_solo_letras = re.sub(r"[^A-Z]", "", texto_linea_mayus)
+            es_total_aislado = texto_linea_solo_letras in {
                 "TOTAL",
                 "TOTAI",
                 "APAGAR",
                 "IMPORTETOTAL",
             }
 
-            for candidate_line_index in range(line_index, min(line_index + 3, len(ocr_lines))):
-                extracted_prices = self.price_extractor_service.extract_prices(
-                    ocr_lines[candidate_line_index]
+            for indice_linea_candidata in range(
+                indice_linea_keyword, min(indice_linea_keyword + 3, len(ocr_lines))
+            ):
+                precios_linea_candidata = self.price_extractor_service.extract_prices(
+                    ocr_lines[indice_linea_candidata]
                 )
-                for extracted_price in extracted_prices:
-                    if extracted_price <= 0:
+                for precio_candidato in precios_linea_candidata:
+                    if precio_candidato <= 0:
                         continue
-                    candidate_score = self._score_candidate(
-                        candidate_line_index,
-                        is_standalone_total,
-                        is_vat_total,
-                        is_subtotal,
+                    puntuacion_candidata = self._score_candidate(
+                        indice_linea_candidata,
+                        es_total_aislado,
+                        es_linea_total_iva,
+                        es_subtotal,
                     )
-                    total_candidates.append(
-                        (candidate_score, extracted_price, candidate_line_index)
+                    candidatos_puntuados.append(
+                        (puntuacion_candidata, precio_candidato, indice_linea_candidata)
                     )
 
-        return total_candidates
+        return candidatos_puntuados
 
     @staticmethod
-    def _score_candidate(candidate_line_index, is_standalone_total, is_vat_total, is_subtotal):
-        score = 100 + candidate_line_index + (30 if is_standalone_total else 0)
-        if is_vat_total:
-            score -= 80
-        if is_subtotal:
-            score -= 60
-        return score
+    def _score_candidate(indice_linea_candidata, es_total_aislado, es_total_iva, es_subtotal):
+        puntuacion = 100 + indice_linea_candidata + (30 if es_total_aislado else 0)
+        if es_total_iva:
+            puntuacion -= 80
+        if es_subtotal:
+            puntuacion -= 60
+        return puntuacion
 
     def _find_largest_plausible_decimal(self, ocr_lines):
-        plausible_numeric_values = []
-        for line_text in ocr_lines:
-            if any(vat_related_token in line_text.upper() for vat_related_token in ["IVA", "%", "TIPO", "BASE IMPONIBLE"]):
+        valores_numericos_plausibles = []
+        for texto_linea_candidata in ocr_lines:
+            if any(
+                token_relacionado_iva in texto_linea_candidata.upper()
+                for token_relacionado_iva in ["IVA", "%", "TIPO", "BASE IMPONIBLE"]
+            ):
                 continue
-            extracted_prices = self.price_extractor_service.extract_prices(line_text)
-            for extracted_price in extracted_prices:
-                if extracted_price > 0.5:
-                    plausible_numeric_values.append(extracted_price)
-        return max(plausible_numeric_values) if plausible_numeric_values else None
+            precios_linea_candidata = self.price_extractor_service.extract_prices(
+                texto_linea_candidata
+            )
+            for precio_candidato in precios_linea_candidata:
+                if precio_candidato > 0.5:
+                    valores_numericos_plausibles.append(precio_candidato)
+        return max(valores_numericos_plausibles) if valores_numericos_plausibles else None

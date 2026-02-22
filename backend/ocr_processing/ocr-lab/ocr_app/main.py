@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from typing import Union
+from typing import Any
 
 import cv2
 
@@ -19,10 +19,13 @@ else:
     from .ocr import OCREngine
     from .parsing import TicketParser, export_productos_json, export_tsv
 
+RUTA_IMAGEN_HARDCODEADA = (
+    "/home/adri/dev/github/manager-finance/backend/ocr_processing/ocr-lab/merc.jpg"
+)
 
-def imprimir_resultados(datos: dict) -> None:
-    # Imprime el resumen de datos extraidos de forma legible.
-    """Muestra por consola el resultado del OCR y parsing."""
+
+def _imprimir_resultados_consola(datos: dict[str, Any]) -> None:
+    # TODO_REMOVE_CLI: salida visual temporal para pruebas manuales.
     print("\n" + "=" * 60)
     print("DATOS EXTRAIDOS")
     print("=" * 60)
@@ -42,13 +45,8 @@ def imprimir_resultados(datos: dict) -> None:
 
 
 def _parsear_argumentos(argv: list[str]) -> argparse.Namespace:
+    # TODO_REMOVE_CLI: cuando se integre como servicio/API, eliminar argparse.
     parser = argparse.ArgumentParser(description="OCR + parsing de tickets/facturas.")
-    parser.add_argument(
-        "ruta_imagen",
-        nargs="?",
-        default="amazon.jpg",
-        help="Ruta de la factura/ticket a procesar.",
-    )
     parser.add_argument(
         "--formato",
         choices=["dict", "tsv", "productos-json"],
@@ -58,21 +56,30 @@ def _parsear_argumentos(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv[1:])
 
 
-def main(argv: list[str]) -> Union[dict, str]:
-    # Punto de entrada principal para ejecutar OCR + parsing.
-    """Ejecuta el flujo completo OCR + parsing desde CLI."""
-    argumentos = _parsear_argumentos(argv)
-    config = OCRConfig(ruta_imagen=argumentos.ruta_imagen)
+def _cargar_imagen_desde_ruta() -> Any:
+    """Carga la imagen de trabajo desde ruta hardcodeada."""
+    imagen = cv2.imread(RUTA_IMAGEN_HARDCODEADA)
+    if imagen is None:
+        raise RuntimeError(
+            f"❌ No se pudo cargar la imagen. Ruta intentada: {RUTA_IMAGEN_HARDCODEADA}"
+        )
+    return imagen
 
-    imagen_original = cv2.imread(config.ruta_imagen)
-    if imagen_original is None:
-        raise RuntimeError("❌ No se pudo cargar la imagen. Revisa la ruta.")
 
+def procesar_ticket() -> dict[str, Any]:
+    """Ejecuta OCR + parsing y devuelve un diccionario estructurado."""
+    config = OCRConfig(ruta_imagen=RUTA_IMAGEN_HARDCODEADA)
+    imagen_original = _cargar_imagen_desde_ruta()
     ocr = OCREngine(config)
     lineas_detectadas = ocr.ejecutar(imagen_original)
-
     parser = TicketParser()
-    datos = parser.parsear(lineas_detectadas)
+    return parser.parsear(lineas_detectadas)
+
+
+def main(argv: list[str]) -> dict[str, Any] | str:
+    # TODO_REMOVE_CLI: punto de entrada temporal para uso por consola.
+    argumentos = _parsear_argumentos(argv)
+    datos = procesar_ticket()
 
     if argumentos.formato == "tsv":
         salida_tsv = export_tsv(datos)
@@ -84,7 +91,7 @@ def main(argv: list[str]) -> Union[dict, str]:
         print(salida_json)
         return salida_json
 
-    imprimir_resultados(datos)
+    _imprimir_resultados_consola(datos)
 
     return datos
 

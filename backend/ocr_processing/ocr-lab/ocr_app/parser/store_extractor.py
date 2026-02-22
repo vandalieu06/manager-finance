@@ -11,37 +11,44 @@ class StoreExtractor:
         self.known_stores = KNOWN_STORES
 
     def extract(self, ocr_lines):
-        full_ocr_text = " ".join(ocr_lines).upper()
-        for canonical_store_name, store_variants in self.known_stores.items():
-            if any(store_variant in full_ocr_text for store_variant in store_variants):
-                return canonical_store_name
+        texto_ocr_completo_mayus = " ".join(ocr_lines).upper()
+        for nombre_comercio_canonico, variantes_comercio_conocidas in self.known_stores.items():
+            if any(
+                variante_comercio in texto_ocr_completo_mayus
+                for variante_comercio in variantes_comercio_conocidas
+            ):
+                return nombre_comercio_canonico
 
-        best_score = 0.0
-        best_matching_store = None
-        normalized_candidate_lines = [
-            re.sub(r"[^A-Za-zÀ-ÿ\s]", "", ocr_line).upper().strip()
-            for ocr_line in ocr_lines[:12]
+        mejor_score_similitud = 0.0
+        mejor_nombre_comercio = None
+        lineas_candidatas_cabecera_normalizadas = [
+            re.sub(r"[^A-Za-zÀ-ÿ\s]", "", linea_cabecera).upper().strip()
+            for linea_cabecera in ocr_lines[:12]
         ]
 
-        for canonical_store_name, store_variants in self.known_stores.items():
-            for store_variant in store_variants:
-                normalized_variant = re.sub(r"[^A-Za-zÀ-ÿ\s]", "", store_variant).upper().strip()
-                for normalized_candidate_line in normalized_candidate_lines:
-                    if not normalized_candidate_line:
+        for nombre_comercio_canonico, variantes_comercio_conocidas in self.known_stores.items():
+            for variante_comercio in variantes_comercio_conocidas:
+                variante_comercio_normalizada = re.sub(
+                    r"[^A-Za-zÀ-ÿ\s]", "", variante_comercio
+                ).upper().strip()
+                for linea_cabecera_normalizada in lineas_candidatas_cabecera_normalizadas:
+                    if not linea_cabecera_normalizada:
                         continue
-                    similarity_score = SequenceMatcher(
-                        None, normalized_candidate_line, normalized_variant
+                    score_similitud = SequenceMatcher(
+                        None, linea_cabecera_normalizada, variante_comercio_normalizada
                     ).ratio()
-                    if similarity_score > best_score:
-                        best_score = similarity_score
-                        best_matching_store = canonical_store_name
+                    if score_similitud > mejor_score_similitud:
+                        mejor_score_similitud = score_similitud
+                        mejor_nombre_comercio = nombre_comercio_canonico
 
-        if best_score >= 0.7:
-            return best_matching_store
+        if mejor_score_similitud >= 0.7:
+            return mejor_nombre_comercio
 
-        for ocr_line in ocr_lines[:10]:
-            line_text_without_symbols = re.sub(r"[^A-Za-zÀ-ÿ\s]", "", ocr_line).strip()
-            if 4 <= len(line_text_without_symbols) <= 30:
-                return line_text_without_symbols.upper()
+        for linea_ocr_temprana in ocr_lines[:10]:
+            candidato_comercio_fallback = re.sub(
+                r"[^A-Za-zÀ-ÿ\s]", "", linea_ocr_temprana
+            ).strip()
+            if 4 <= len(candidato_comercio_fallback) <= 30:
+                return candidato_comercio_fallback.upper()
 
         return None

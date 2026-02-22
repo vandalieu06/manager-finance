@@ -7,20 +7,20 @@ class PriceExtractor:
     def __init__(self, normalize_number_function):
         self.normalize_number_function = normalize_number_function
 
-    def extract_prices(self, line_text):
-        upper_line_text = line_text.upper()
+    def extract_prices(self, texto_linea_ocr):
+        texto_linea_mayus = texto_linea_ocr.upper()
 
-        if "%" in upper_line_text or "IVA" in upper_line_text:
+        if "%" in texto_linea_mayus or "IVA" in texto_linea_mayus:
             return []
-        if re.search(r"\d+[.,]\d{2}\s*P\b", upper_line_text):
+        if re.search(r"\d+[.,]\d{2}\s*P\b", texto_linea_mayus):
             return []
-        if re.search(r"\b(CP|OP|ID)\s*[:\-]\s*\d+\b", upper_line_text):
+        if re.search(r"\b(CP|OP|ID)\s*[:\-]\s*\d+\b", texto_linea_mayus):
             return []
 
-        matched_numeric_tokens = re.findall(r"-?\d+(?:[.,]\d{2,3})", line_text)
-        extracted_prices = []
-        for numeric_token in matched_numeric_tokens:
-            normalized_number = self.normalize_number_function(numeric_token)
-            if normalized_number is not None:
-                extracted_prices.append(normalized_number)
-        return extracted_prices
+        tokens_numericos = re.findall(r"-?\d+(?:[.,]\d{2,3})", texto_linea_ocr)
+        candidatos_precio_normalizados = []
+        for token_numerico in tokens_numericos:
+            valor_normalizado = self.normalize_number_function(token_numerico)
+            if valor_normalizado is not None:
+                candidatos_precio_normalizados.append(valor_normalizado)
+        return candidatos_precio_normalizados

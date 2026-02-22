@@ -12,156 +12,167 @@ class MetadataExtractor:
         self.normalize_number_function = normalize_number_function
 
     def extract_cif(self, ocr_lines):
-        cif_patterns = [
+        patrones_cif = [
             r"\b([A-Z]\d{8})\b",
             r"\b(\d{8}[A-Z])\b",
             r"\b([A-Z]\d{7}[A-Z0-9])\b",
         ]
 
-        for line_text in ocr_lines[:20]:
-            for cif_pattern in cif_patterns:
-                matched_cif = re.search(cif_pattern, line_text.upper())
-                if matched_cif:
-                    return matched_cif.group(1)
+        for texto_linea_candidata in ocr_lines[:20]:
+            for patron_cif in patrones_cif:
+                coincidencia_cif = re.search(patron_cif, texto_linea_candidata.upper())
+                if coincidencia_cif:
+                    return coincidencia_cif.group(1)
         return ""
 
     def extract_phone(self, ocr_lines):
-        for line_text in ocr_lines[:25]:
-            matched_phone = re.search(r"(?:\+34\s*)?(\d(?:[\s.-]?\d){8})", line_text)
-            if matched_phone:
-                return re.sub(r"\D", "", matched_phone.group(1))
+        for texto_linea_candidata in ocr_lines[:25]:
+            coincidencia_telefono = re.search(
+                r"(?:\+34\s*)?(\d(?:[\s.-]?\d){8})", texto_linea_candidata
+            )
+            if coincidencia_telefono:
+                return re.sub(r"\D", "", coincidencia_telefono.group(1))
         return ""
 
     def extract_op(self, ocr_lines):
-        for line_text in ocr_lines:
-            matched_operation_code = re.search(
-                r"\bOP\s*[:\-]?\s*([A-Z0-9]+)\b", line_text.upper()
+        for texto_linea_candidata in ocr_lines:
+            coincidencia_codigo_operacion = re.search(
+                r"\bOP\s*[:\-]?\s*([A-Z0-9]+)\b", texto_linea_candidata.upper()
             )
-            if matched_operation_code:
-                return matched_operation_code.group(1)
+            if coincidencia_codigo_operacion:
+                return coincidencia_codigo_operacion.group(1)
         return ""
 
     def extract_ticket_id(self, ocr_lines):
-        ticket_id_patterns = [
+        patrones_regex_ticket_id = [
             r"\b(?:TICKET|FACTURA)\s*(?:N[Oº°]\s*)?[:\-]?\s*([A-Z0-9\-]{4,})\b",
             r"\bN[Oº°]\s*[:\-]?\s*([A-Z0-9\-]{5,})\b",
         ]
 
-        for line_text in ocr_lines:
-            upper_line_text = line_text.upper()
-            for ticket_id_pattern in ticket_id_patterns:
-                matched_ticket_id = re.search(ticket_id_pattern, upper_line_text)
-                if matched_ticket_id:
-                    return matched_ticket_id.group(1)
+        for texto_linea_candidata in ocr_lines:
+            texto_linea_mayus = texto_linea_candidata.upper()
+            for patron_ticket_id in patrones_regex_ticket_id:
+                coincidencia_ticket_id = re.search(patron_ticket_id, texto_linea_mayus)
+                if coincidencia_ticket_id:
+                    return coincidencia_ticket_id.group(1)
         return ""
 
     def extract_address_postal(self, ocr_lines):
-        detected_address = ""
-        detected_postal_city = ""
+        linea_direccion_extraida = ""
+        linea_postal_ciudad_extraida = ""
 
-        for line_text in ocr_lines[:25]:
-            if not detected_address and self.line_classifier.is_address_line(line_text):
-                detected_address = line_text.strip()
+        for texto_linea_candidata in ocr_lines[:25]:
             if (
-                not detected_postal_city
-                and re.search(r"\b\d{5}\b", line_text)
-                and has_letters(line_text)
+                not linea_direccion_extraida
+                and self.line_classifier.is_address_line(texto_linea_candidata)
             ):
-                detected_postal_city = line_text.strip()
-            if detected_address and detected_postal_city:
+                linea_direccion_extraida = texto_linea_candidata.strip()
+            if (
+                not linea_postal_ciudad_extraida
+                and re.search(r"\b\d{5}\b", texto_linea_candidata)
+                and has_letters(texto_linea_candidata)
+            ):
+                linea_postal_ciudad_extraida = texto_linea_candidata.strip()
+            if linea_direccion_extraida and linea_postal_ciudad_extraida:
                 break
 
-        return detected_address, detected_postal_city
+        return linea_direccion_extraida, linea_postal_ciudad_extraida
 
     def extract_vat(self, ocr_lines):
-        extracted_vat_rows = []
+        filas_iva = []
 
-        for line_text in ocr_lines:
-            if "IVA" not in line_text.upper():
+        for texto_linea_candidata in ocr_lines:
+            if "IVA" not in texto_linea_candidata.upper():
                 continue
 
-            matched_vat_rate = re.search(r"(\d{1,2}(?:[.,]\d{1,2})?)\s*%", line_text)
-            normalized_line_numbers = [
-                normalized_number
-                for normalized_number in (
-                    self.normalize_number_function(raw_number_token)
-                    for raw_number_token in re.findall(r"-?\d+(?:[.,]\d{2,3})", line_text)
+            coincidencia_tasa_iva = re.search(
+                r"(\d{1,2}(?:[.,]\d{1,2})?)\s*%", texto_linea_candidata
+            )
+            tokens_numericos_normalizados = [
+                valor_token_normalizado
+                for valor_token_normalizado in (
+                    self.normalize_number_function(token_numerico_crudo)
+                    for token_numerico_crudo in re.findall(
+                        r"-?\d+(?:[.,]\d{2,3})", texto_linea_candidata
+                    )
                 )
-                if normalized_number is not None
+                if valor_token_normalizado is not None
             ]
 
-            if len(normalized_line_numbers) < 2:
+            if len(tokens_numericos_normalizados) < 2:
                 continue
 
-            vat_base_amount = normalized_line_numbers[-2]
-            vat_quota_amount = normalized_line_numbers[-1]
+            importe_base_iva = tokens_numericos_normalizados[-2]
+            importe_cuota_iva = tokens_numericos_normalizados[-1]
 
-            if vat_base_amount <= 0 or vat_quota_amount < 0:
+            if importe_base_iva <= 0 or importe_cuota_iva < 0:
                 continue
 
-            normalized_vat_rate = (
-                self.normalize_number_function(matched_vat_rate.group(1))
-                if matched_vat_rate
+            tasa_iva_normalizada = (
+                self.normalize_number_function(coincidencia_tasa_iva.group(1))
+                if coincidencia_tasa_iva
                 else None
             )
-            extracted_vat_rows.append(
+            filas_iva.append(
                 {
-                    "rate": round(normalized_vat_rate, 2)
-                    if normalized_vat_rate is not None
+                    "rate": round(tasa_iva_normalizada, 2)
+                    if tasa_iva_normalizada is not None
                     else 0.0,
-                    "base": round(vat_base_amount, 2),
-                    "amount": round(vat_quota_amount, 2),
+                    "base": round(importe_base_iva, 2),
+                    "amount": round(importe_cuota_iva, 2),
                 }
             )
 
-        return extracted_vat_rows
+        return filas_iva
 
     def extract_payments(self, ocr_lines):
-        extracted_payments = []
+        filas_pago_extraidas = []
 
-        for line_text in ocr_lines:
-            if not self.line_classifier.is_payment_line(line_text):
+        for texto_linea_candidata in ocr_lines:
+            if not self.line_classifier.is_payment_line(texto_linea_candidata):
                 continue
 
-            line_prices = self.price_extractor_service.extract_prices(line_text)
-            inferred_payment_method = self._infer_payment_method(line_text)
-            if inferred_payment_method and line_prices:
-                extracted_payments.append(
-                    {"method": inferred_payment_method, "amount": round(max(line_prices), 2)}
+            candidatos_importe_linea = self.price_extractor_service.extract_prices(
+                texto_linea_candidata
+            )
+            metodo_pago = self._infer_payment_method(texto_linea_candidata)
+            if metodo_pago and candidatos_importe_linea:
+                filas_pago_extraidas.append(
+                    {"method": metodo_pago, "amount": round(max(candidatos_importe_linea), 2)}
                 )
 
-        return extracted_payments
+        return filas_pago_extraidas
 
     @staticmethod
-    def adjust_total_with_vat(extracted_total, extracted_vat_rows):
-        if not extracted_vat_rows:
-            return round(extracted_total, 2) if extracted_total is not None else None
+    def adjust_total_with_vat(importe_total_base, filas_iva):
+        if not filas_iva:
+            return round(importe_total_base, 2) if importe_total_base is not None else None
 
-        vat_base_total = round(sum(vat_row.get("base", 0.0) for vat_row in extracted_vat_rows), 2)
-        vat_quota_total = round(
-            sum(vat_row.get("amount", 0.0) for vat_row in extracted_vat_rows), 2
+        suma_bases_iva = round(sum(fila_iva.get("base", 0.0) for fila_iva in filas_iva), 2)
+        suma_cuotas_iva = round(
+            sum(fila_iva.get("amount", 0.0) for fila_iva in filas_iva), 2
         )
 
-        if vat_base_total <= 0 or vat_quota_total <= 0:
-            return round(extracted_total, 2) if extracted_total is not None else None
+        if suma_bases_iva <= 0 or suma_cuotas_iva <= 0:
+            return round(importe_total_base, 2) if importe_total_base is not None else None
 
-        adjusted_total_with_vat = round(vat_base_total + vat_quota_total, 2)
-        if extracted_total is None:
-            return adjusted_total_with_vat
+        total_ajustado_con_iva = round(suma_bases_iva + suma_cuotas_iva, 2)
+        if importe_total_base is None:
+            return total_ajustado_con_iva
 
-        rounded_extracted_total = round(extracted_total, 2)
-        if abs(rounded_extracted_total - vat_base_total) <= 0.02:
-            return adjusted_total_with_vat
-        return rounded_extracted_total
+        total_base_redondeado = round(importe_total_base, 2)
+        if abs(total_base_redondeado - suma_bases_iva) <= 0.02:
+            return total_ajustado_con_iva
+        return total_base_redondeado
 
     @staticmethod
-    def _infer_payment_method(line_text):
-        upper_line_text = line_text.upper()
-        if "EFECT" in upper_line_text:
+    def _infer_payment_method(texto_linea_pago):
+        texto_linea_mayus = texto_linea_pago.upper()
+        if "EFECT" in texto_linea_mayus:
             return "EFECTIVO"
         if any(
-            payment_token in upper_line_text
-            for payment_token in ["TARJETA", "TARGETA", "VISA", "MASTERCARD", "MAESTRO"]
+            token_pago in texto_linea_mayus
+            for token_pago in ["TARJETA", "TARGETA", "VISA", "MASTERCARD", "MAESTRO"]
         ):
             return "TARJETA"
         return ""

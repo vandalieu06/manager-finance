@@ -1,70 +1,70 @@
 import re
 
 
-def normalize_number(raw_number_text):
+def normalize_number(texto_numero_crudo):
     """Convierte texto con comas/puntos a float tolerante a OCR."""
-    sanitized_number_text = re.sub(r"[^\d,.\-]", "", raw_number_text.replace(" ", ""))
-    if not re.search(r"\d", sanitized_number_text):
+    texto_numero_limpio = re.sub(r"[^\d,.\-]", "", texto_numero_crudo.replace(" ", ""))
+    if not re.search(r"\d", texto_numero_limpio):
         return None
 
-    decimal_separator = None
-    if "." in sanitized_number_text and "," in sanitized_number_text:
-        decimal_separator = (
+    separador_decimal_detectado = None
+    if "." in texto_numero_limpio and "," in texto_numero_limpio:
+        separador_decimal_detectado = (
             ","
-            if sanitized_number_text.rfind(",") > sanitized_number_text.rfind(".")
+            if texto_numero_limpio.rfind(",") > texto_numero_limpio.rfind(".")
             else "."
         )
-    elif "," in sanitized_number_text:
-        comma_split_parts = sanitized_number_text.split(",")
-        if len(comma_split_parts) >= 2 and 1 <= len(comma_split_parts[-1]) <= 3:
-            decimal_separator = ","
-    elif "." in sanitized_number_text:
-        dot_split_parts = sanitized_number_text.split(".")
-        if len(dot_split_parts) >= 2 and 1 <= len(dot_split_parts[-1]) <= 3:
-            decimal_separator = "."
+    elif "," in texto_numero_limpio:
+        segmentos_con_coma = texto_numero_limpio.split(",")
+        if len(segmentos_con_coma) >= 2 and 1 <= len(segmentos_con_coma[-1]) <= 3:
+            separador_decimal_detectado = ","
+    elif "." in texto_numero_limpio:
+        segmentos_con_punto = texto_numero_limpio.split(".")
+        if len(segmentos_con_punto) >= 2 and 1 <= len(segmentos_con_punto[-1]) <= 3:
+            separador_decimal_detectado = "."
 
-    if decimal_separator == ",":
-        sanitized_number_text = sanitized_number_text.replace(".", "")
-        sanitized_number_text = sanitized_number_text.replace(",", ".")
-    elif decimal_separator == ".":
-        sanitized_number_text = sanitized_number_text.replace(",", "")
+    if separador_decimal_detectado == ",":
+        texto_numero_limpio = texto_numero_limpio.replace(".", "")
+        texto_numero_limpio = texto_numero_limpio.replace(",", ".")
+    elif separador_decimal_detectado == ".":
+        texto_numero_limpio = texto_numero_limpio.replace(",", "")
     else:
-        sanitized_number_text = re.sub(r"[.,]", "", sanitized_number_text)
+        texto_numero_limpio = re.sub(r"[.,]", "", texto_numero_limpio)
 
-    if sanitized_number_text in {"", "-", ".", "-."}:
+    if texto_numero_limpio in {"", "-", ".", "-."}:
         return None
 
     try:
-        return float(sanitized_number_text)
+        return float(texto_numero_limpio)
     except ValueError:
         return None
 
 
-def normalize_ocr_lines(raw_ocr_text):
+def normalize_ocr_lines(texto_ocr_crudo):
     """Normaliza OCR crudo en lineas limpias sin vacios."""
     return [
-        re.sub(r"\s+", " ", raw_ocr_line).strip()
-        for raw_ocr_line in raw_ocr_text.splitlines()
-        if raw_ocr_line.strip()
+        re.sub(r"\s+", " ", texto_linea_crudo).strip()
+        for texto_linea_crudo in texto_ocr_crudo.splitlines()
+        if texto_linea_crudo.strip()
     ]
 
 
-def has_letters(candidate_text):
+def has_letters(texto_candidato):
     """Indica si hay suficiente contenido textual para tratar la linea como texto."""
-    return len(re.findall(r"[A-Za-zÀ-ÿ]", candidate_text)) >= 2
+    return len(re.findall(r"[A-Za-zÀ-ÿ]", texto_candidato)) >= 2
 
 
-def sanitize_tsv_field(raw_field_value):
+def sanitize_tsv_field(valor_campo_crudo):
     """Evita romper el contrato TSV por tabs o saltos de linea."""
-    if raw_field_value is None:
+    if valor_campo_crudo is None:
         return ""
-    return str(raw_field_value).replace("\t", " ").replace("\n", " ").strip()
+    return str(valor_campo_crudo).replace("\t", " ").replace("\n", " ").strip()
 
 
-def format_numeric_field(raw_numeric_value, decimals=2):
+def format_numeric_field(valor_numerico_crudo, decimals=2):
     """Formatea numeros para salida TSV respetando campos opcionales."""
-    if raw_numeric_value is None or raw_numeric_value == "":
+    if valor_numerico_crudo is None or valor_numerico_crudo == "":
         return ""
-    if isinstance(raw_numeric_value, (float, int)):
-        return f"{float(raw_numeric_value):.{decimals}f}"
-    return sanitize_tsv_field(raw_numeric_value)
+    if isinstance(valor_numerico_crudo, (float, int)):
+        return f"{float(valor_numerico_crudo):.{decimals}f}"
+    return sanitize_tsv_field(valor_numerico_crudo)
