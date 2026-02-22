@@ -1,6 +1,5 @@
 from .config import OCRConfig
 from .models import Producto
-from .ocr_engine import OCREngine
 from .parsing import (
     TicketParser,
     export_productos_json,
@@ -8,6 +7,11 @@ from .parsing import (
     parsear_a_productos_json,
     parsear_a_tsv,
 )
+
+try:
+    from .ocr import OCREngine
+except ModuleNotFoundError:  # pragma: no cover - entorno sin dependencias OCR opcionales
+    OCREngine = None  # type: ignore[assignment]
 
 __all__ = [
     "OCRConfig",

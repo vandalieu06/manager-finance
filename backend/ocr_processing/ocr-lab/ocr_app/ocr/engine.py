@@ -5,7 +5,7 @@ from typing import List, Tuple
 import cv2
 import easyocr
 
-from .config import OCRConfig
+from ..config import OCRConfig
 from .preprocess import Preprocessor
 
 
