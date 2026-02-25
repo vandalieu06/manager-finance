@@ -10,7 +10,7 @@ ticket_bp = Blueprint('ticket', __name__)
 _ocr_service = None
 
 
-def get_ocr_service() -> OCRService:
+def get_ocr_service():
     global _ocr_service
     if _ocr_service is None:
         _ocr_service = OCRService()

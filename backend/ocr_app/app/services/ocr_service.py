@@ -1,5 +1,3 @@
-from typing import List
-
 from config import OCRConfig
 from core.entities.producto import Producto
 from core.ports.ocr_port import OCRPort
@@ -13,14 +11,14 @@ class OCRService:
 
     def __init__(
         self,
-        ocr_adapter: OCRPort = None,
-        llm_adapter: LLMPort = None,
-        config: OCRConfig = None
+        ocr_adapter = None,
+        llm_adapter = None,
+        config = None
     ):
         self._ocr_adapter = ocr_adapter or EasyOCRAdapter(config)
         self._llm_adapter = llm_adapter or OllamaAdapter()
 
-    def process_ticket(self, image) -> List[dict]:
+    def process_ticket(self, image):
         """Procesa una imagen de ticket y retorna array de productos."""
         ocr_lines = self._ocr_adapter.extract_text(image)
         ocr_text = "\n".join(ocr_lines)
@@ -29,6 +27,6 @@ class OCRService:
 
         return [p.to_dict() for p in productos]
 
-    def extract_text_only(self, image) -> List[str]:
+    def extract_text_only(self, image):
         """Extrae solo texto OCR sin procesamiento LLM."""
         return self._ocr_adapter.extract_text(image)

@@ -1,5 +1,3 @@
-from typing import List
-
 from core.entities.producto import Producto
 from core.ports.llm_port import LLMPort
 
@@ -10,11 +8,11 @@ import requests
 class OllamaAdapter(LLMPort):
     """Adaptador que implementa LLMPort usando Ollama."""
 
-    def __init__(self, model_name: str = "llama3.2:1b", base_url: str = "http://localhost:11434"):
+    def __init__(self, model_name = "llama3.2:1b", base_url = "http://localhost:11434"):
         self.model_name = model_name
         self.base_url = base_url
 
-    def extract_products(self, ocr_text: str) -> List[Producto]:
+    def extract_products(self, ocr_text):
         """Extrae productos del texto OCR usando Ollama."""
 
         prompt = self._build_prompt(ocr_text)
@@ -36,7 +34,7 @@ class OllamaAdapter(LLMPort):
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Error comunicando con Ollama: {e}")
 
-    def _build_prompt(self, ocr_text: str) -> str:
+    def _build_prompt(self, ocr_text):
         return f"""Eres un asistente especializado en extraer información de tickets de compra en español.
                 Del siguiente texto extraído de un ticket, extrae todos los productos comprados.
                 Para cada producto proporciona:
@@ -52,7 +50,7 @@ class OllamaAdapter(LLMPort):
                 
                 Responde con el JSON:"""
 
-    def _parse_llm_response(self, response: str) -> List[Producto]:
+    def _parse_llm_response(self, response):
         import json
         import re
 
@@ -77,7 +75,7 @@ class OllamaAdapter(LLMPort):
         except (json.JSONDecodeError, ValueError) as e:
             raise RuntimeError(f"Error parseando respuesta de LLM: {e}")
 
-    def _parse_float(self, value) -> float | None:
+    def _parse_float(self, value):
         if value is None:
             return None
         try:

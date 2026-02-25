@@ -10,12 +10,12 @@ class Preprocessor:
     """Aplica distintas tecnicas de preprocesado a imagenes."""
 
     # Inicializa el preprocesador con configuracion compartida.
-    def __init__(self, config: OCRConfig) -> None:
+    def __init__(self, config):
         """Inicializa el preprocesador con la configuracion dada."""
         self.config = config
 
     # Rota imagenes horizontales para mantener texto en vertical.
-    def orientar_vertical_si_horizontal(self, imagen_bgr: np.ndarray) -> np.ndarray:
+    def orientar_vertical_si_horizontal(self, imagen_bgr):
         """Rota imagenes si el ancho supera el alto."""
         alto, ancho = imagen_bgr.shape[:2]
         if ancho > alto:
@@ -24,8 +24,8 @@ class Preprocessor:
 
     # Calcula factor de escalado objetivo segun ancho y limites.
     def _calcular_factor_escalado(
-        self, imagen_gris: np.ndarray, factor_base: float
-    ) -> float:
+        self, imagen_gris, factor_base
+    ):
         """Calcula el factor de escalado para acercarse al ancho objetivo."""
         alto, ancho = imagen_gris.shape[:2]
         ancho_deseado = self.config.ancho_objetivo_ocr
@@ -34,8 +34,8 @@ class Preprocessor:
 
     # Preprocesa con escalado inteligente y binarizacion adaptativa.
     def preprocesar_escalado_y_binarizacion_adaptativa(
-        self, imagen_bgr: np.ndarray
-    ) -> np.ndarray:
+        self, imagen_bgr
+    ):
         """Aumenta resolucion y binariza para mejorar texto pequeno."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
         factor = self._calcular_factor_escalado(
@@ -60,7 +60,7 @@ class Preprocessor:
         return imagen_binaria
 
     # Preprocesa con CLAHE agresivo para bajo contraste.
-    def preprocesar_clahe_agresivo(self, imagen_bgr: np.ndarray) -> np.ndarray:
+    def preprocesar_clahe_agresivo(self, imagen_bgr):
         """Mejora contraste local y realza texto tenue."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
         factor = self._calcular_factor_escalado(imagen_gris, self.config.escalado_medio)
@@ -81,7 +81,7 @@ class Preprocessor:
 
 
     # Preprocesa con Otsu tras escalado inteligente.
-    def preprocesar_otsu(self, imagen_bgr: np.ndarray) -> np.ndarray:
+    def preprocesar_otsu(self, imagen_bgr):
         """Aplica umbral Otsu tras escalar para fondo uniforme."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
         factor = self._calcular_factor_escalado(
@@ -104,8 +104,8 @@ class Preprocessor:
 
     # Invierte la imagen si el fondo es oscuro y binariza.
     def preprocesar_invertir_si_fondo_oscuro(
-        self, imagen_bgr: np.ndarray
-    ) -> np.ndarray:
+        self, imagen_bgr
+    ):
         """Invierte colores cuando el fondo es oscuro y binariza."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
         factor = self._calcular_factor_escalado(
@@ -133,7 +133,7 @@ class Preprocessor:
         return imagen_binaria
 
     # Preprocesa fotos de movil con filtro bilateral, CLAHE y deskew.
-    def preprocesar_foto_movil(self, imagen_bgr: np.ndarray) -> np.ndarray:
+    def preprocesar_foto_movil(self, imagen_bgr):
         """Reduce ruido de camara y corrige inclinacion ligera."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
         factor = self._calcular_factor_escalado(imagen_gris, 2.0)
@@ -174,8 +174,8 @@ class Preprocessor:
 
     # Construye todas las variantes de preprocesado para OCR.
     def construir_versiones(
-        self, imagen_bgr: np.ndarray
-    ) -> list[tuple[str, np.ndarray]]:
+        self, imagen_bgr
+    ):
         """Devuelve lista de imagenes preprocesadas con nombre."""
         imagen_orientada = self.orientar_vertical_si_horizontal(imagen_bgr)
         return [
