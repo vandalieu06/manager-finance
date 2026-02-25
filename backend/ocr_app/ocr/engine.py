@@ -5,8 +5,8 @@ from typing import List, Tuple
 import cv2
 import easyocr
 
-from ..config import OCRConfig
-from .preprocess import Preprocessor
+from config import OCRConfig
+from ocr.preprocess import Preprocessor
 
 
 class OCREngine:

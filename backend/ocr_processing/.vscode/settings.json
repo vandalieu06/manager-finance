@@ -1,6 +1,0 @@
-{
-  "python.defaultInterpreterPath": "${workspaceFolder}/ocr-lab/venv/bin/python",
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}/ocr-lab"
-  ]
-}
