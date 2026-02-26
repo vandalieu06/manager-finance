@@ -23,9 +23,7 @@ class Preprocessor:
         return imagen_bgr
 
     # Calcula factor de escalado objetivo segun ancho y limites.
-    def _calcular_factor_escalado(
-        self, imagen_gris, factor_base
-    ):
+    def _calcular_factor_escalado(self, imagen_gris, factor_base):
         """Calcula el factor de escalado para acercarse al ancho objetivo."""
         alto, ancho = imagen_gris.shape[:2]
         ancho_deseado = self.config.ancho_objetivo_ocr
@@ -33,9 +31,7 @@ class Preprocessor:
         return min(factor_base, max(1.0, factor_necesario))
 
     # Preprocesa con escalado inteligente y binarizacion adaptativa.
-    def preprocesar_escalado_y_binarizacion_adaptativa(
-        self, imagen_bgr
-    ):
+    def preprocesar_escalado_y_binarizacion_adaptativa(self, imagen_bgr):
         """Aumenta resolucion y binariza para mejorar texto pequeno."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
         factor = self._calcular_factor_escalado(
@@ -78,8 +74,6 @@ class Preprocessor:
         imagen_con_contraste = clahe.apply(imagen_escalada)
         return imagen_con_contraste
 
-
-
     # Preprocesa con Otsu tras escalado inteligente.
     def preprocesar_otsu(self, imagen_bgr):
         """Aplica umbral Otsu tras escalar para fondo uniforme."""
@@ -100,12 +94,8 @@ class Preprocessor:
         )
         return imagen_binaria
 
-
-
     # Invierte la imagen si el fondo es oscuro y binariza.
-    def preprocesar_invertir_si_fondo_oscuro(
-        self, imagen_bgr
-    ):
+    def preprocesar_invertir_si_fondo_oscuro(self, imagen_bgr):
         """Invierte colores cuando el fondo es oscuro y binariza."""
         imagen_gris = cv2.cvtColor(imagen_bgr, cv2.COLOR_BGR2GRAY)
         factor = self._calcular_factor_escalado(
@@ -173,27 +163,25 @@ class Preprocessor:
         return imagen_contraste
 
     # Construye todas las variantes de preprocesado para OCR.
-    def construir_versiones(
-        self, imagen_bgr
-    ):
+    def construir_versiones(self, imagen_bgr):
         """Devuelve lista de imagenes preprocesadas con nombre."""
         imagen_orientada = self.orientar_vertical_si_horizontal(imagen_bgr)
         return [
             (
-                "Metodo 1: Escalado + Binarizacion",
+                'Metodo 1: Escalado + Binarizacion',
                 self.preprocesar_escalado_y_binarizacion_adaptativa(imagen_orientada),
             ),
             (
-                "Metodo 2: CLAHE agresivo",
+                'Metodo 2: CLAHE agresivo',
                 self.preprocesar_clahe_agresivo(imagen_orientada),
             ),
-            ("Metodo 3: Otsu", self.preprocesar_otsu(imagen_orientada)),
+            ('Metodo 3: Otsu', self.preprocesar_otsu(imagen_orientada)),
             (
-                "Metodo 4: Invertir si fondo oscuro",
+                'Metodo 4: Invertir si fondo oscuro',
                 self.preprocesar_invertir_si_fondo_oscuro(imagen_orientada),
             ),
             (
-                "Metodo 5: Foto movil (bilateral+CLAHE+deskew)",
+                'Metodo 5: Foto movil (bilateral+CLAHE+deskew)',
                 self.preprocesar_foto_movil(imagen_orientada),
             ),
         ]
