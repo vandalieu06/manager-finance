@@ -6,7 +6,9 @@ from .text_utils import has_letters
 class MetadataExtractor:
     """Extrae metadatos de cabecera y fiscalidad/pagos."""
 
-    def __init__(self, line_classifier, price_extractor_service, normalize_number_function):
+    def __init__(
+        self, line_classifier, price_extractor_service, normalize_number_function
+    ):
         self.line_classifier = line_classifier
         self.price_extractor_service = price_extractor_service
         self.normalize_number_function = normalize_number_function
@@ -62,9 +64,8 @@ class MetadataExtractor:
         linea_postal_ciudad_extraida = ""
 
         for texto_linea_candidata in ocr_lines[:25]:
-            if (
-                not linea_direccion_extraida
-                and self.line_classifier.is_address_line(texto_linea_candidata)
+            if not linea_direccion_extraida and self.line_classifier.is_address_line(
+                texto_linea_candidata
             ):
                 linea_direccion_extraida = texto_linea_candidata.strip()
             if (
@@ -138,7 +139,10 @@ class MetadataExtractor:
             metodo_pago = self._infer_payment_method(texto_linea_candidata)
             if metodo_pago and candidatos_importe_linea:
                 filas_pago_extraidas.append(
-                    {"method": metodo_pago, "amount": round(max(candidatos_importe_linea), 2)}
+                    {
+                        "method": metodo_pago,
+                        "amount": round(max(candidatos_importe_linea), 2),
+                    }
                 )
 
         return filas_pago_extraidas
@@ -146,15 +150,21 @@ class MetadataExtractor:
     @staticmethod
     def adjust_total_with_vat(importe_total_base, filas_iva):
         if not filas_iva:
-            return round(importe_total_base, 2) if importe_total_base is not None else None
+            return (
+                round(importe_total_base, 2) if importe_total_base is not None else None
+            )
 
-        suma_bases_iva = round(sum(fila_iva.get("base", 0.0) for fila_iva in filas_iva), 2)
+        suma_bases_iva = round(
+            sum(fila_iva.get("base", 0.0) for fila_iva in filas_iva), 2
+        )
         suma_cuotas_iva = round(
             sum(fila_iva.get("amount", 0.0) for fila_iva in filas_iva), 2
         )
 
         if suma_bases_iva <= 0 or suma_cuotas_iva <= 0:
-            return round(importe_total_base, 2) if importe_total_base is not None else None
+            return (
+                round(importe_total_base, 2) if importe_total_base is not None else None
+            )
 
         total_ajustado_con_iva = round(suma_bases_iva + suma_cuotas_iva, 2)
         if importe_total_base is None:

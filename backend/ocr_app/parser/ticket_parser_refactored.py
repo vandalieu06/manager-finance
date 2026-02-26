@@ -18,7 +18,9 @@ class TicketParserRefactored:
         self.line_classifier = LineClassifier()
         self.total_extractor = TotalExtractor(self.price_extractor)
         self.store_extractor = StoreExtractor()
-        self.product_extractor = ProductExtractor(self.line_classifier, self.price_extractor)
+        self.product_extractor = ProductExtractor(
+            self.line_classifier, self.price_extractor
+        )
         self.product_filter = ProductFilter()
         self.metadata_extractor = MetadataExtractor(
             self.line_classifier,

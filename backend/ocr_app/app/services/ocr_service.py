@@ -9,12 +9,7 @@ from infrastructure.llm import OllamaAdapter
 class OCRService:
     """Servicio que orquesta OCR + LLM para extraer productos de tickets."""
 
-    def __init__(
-        self,
-        ocr_adapter = None,
-        llm_adapter = None,
-        config = None
-    ):
+    def __init__(self, ocr_adapter=None, llm_adapter=None, config=None):
         self._ocr_adapter = ocr_adapter or EasyOCRAdapter(config)
         self._llm_adapter = llm_adapter or OllamaAdapter()
 

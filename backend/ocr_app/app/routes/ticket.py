@@ -5,7 +5,7 @@ import numpy as np
 from ..services.ocr_service import OCRService
 
 
-ticket_bp = Blueprint('ticket', __name__)
+ticket_bp = Blueprint("ticket", __name__)
 
 _ocr_service = None
 
@@ -17,19 +17,19 @@ def get_ocr_service():
     return _ocr_service
 
 
-@ticket_bp.route('/health', methods=['GET'])
+@ticket_bp.route("/health", methods=["GET"])
 def health():
     """Endpoint de salud."""
     return jsonify({"status": "ok"})
 
 
-@ticket_bp.route('/process-ticket', methods=['POST'])
+@ticket_bp.route("/process-ticket", methods=["POST"])
 def process_ticket():
     """Procesa una imagen de ticket y retorna productos extraidos."""
-    if 'image' not in request.files:
+    if "image" not in request.files:
         return jsonify({"error": "No se proporcionó imagen"}), 400
 
-    image_file = request.files['image']
+    image_file = request.files["image"]
 
     img_array = np.frombuffer(image_file.read(), np.uint8)
     image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
@@ -45,13 +45,13 @@ def process_ticket():
         return jsonify({"error": str(e)}), 500
 
 
-@ticket_bp.route('/extract-text', methods=['POST'])
+@ticket_bp.route("/extract-text", methods=["POST"])
 def extract_text():
     """Extrae solo texto OCR de una imagen (sin LLM)."""
-    if 'image' not in request.files:
+    if "image" not in request.files:
         return jsonify({"error": "No se proporcionó imagen"}), 400
 
-    image_file = request.files['image']
+    image_file = request.files["image"]
 
     img_array = np.frombuffer(image_file.read(), np.uint8)
     image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)

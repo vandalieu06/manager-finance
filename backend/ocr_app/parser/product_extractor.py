@@ -63,7 +63,9 @@ class ProductExtractor:
 
             if candidatos_precio_linea:
                 candidatos_precio_positivos = [
-                    precio_linea for precio_linea in candidatos_precio_linea if precio_linea > 0
+                    precio_linea
+                    for precio_linea in candidatos_precio_linea
+                    if precio_linea > 0
                 ]
                 precio_total_linea_seleccionado = (
                     max(candidatos_precio_positivos)
@@ -94,9 +96,13 @@ class ProductExtractor:
                     ):
                         guardar_producto_buffer_si_completo()
                     if partes_nombre_producto_en_buffer:
-                        partes_nombre_producto_en_buffer.append(texto_linea_sin_tokens_precio)
+                        partes_nombre_producto_en_buffer.append(
+                            texto_linea_sin_tokens_precio
+                        )
                     else:
-                        partes_nombre_producto_en_buffer = [texto_linea_sin_tokens_precio]
+                        partes_nombre_producto_en_buffer = [
+                            texto_linea_sin_tokens_precio
+                        ]
                     precio_total_producto_en_buffer = precio_total_linea_seleccionado
                     guardar_producto_buffer_si_completo()
                 elif partes_nombre_producto_en_buffer:
@@ -105,11 +111,16 @@ class ProductExtractor:
             else:
                 if self.line_classifier.is_code_line(texto_linea_normalizado):
                     continue
-                if not self.line_classifier.is_product_candidate(texto_linea_normalizado):
+                if not self.line_classifier.is_product_candidate(
+                    texto_linea_normalizado
+                ):
                     guardar_producto_buffer_si_completo()
                     continue
 
-                if partes_nombre_producto_en_buffer and precio_total_producto_en_buffer is not None:
+                if (
+                    partes_nombre_producto_en_buffer
+                    and precio_total_producto_en_buffer is not None
+                ):
                     guardar_producto_buffer_si_completo()
                 partes_nombre_producto_en_buffer.append(texto_linea_normalizado)
 
@@ -128,7 +139,14 @@ class ProductExtractor:
                 ).upper()
                 if any(
                     keyword_contexto in texto_contexto_cercano
-                    for keyword_contexto in ["CANT", "PRODUCTO", "TOTAL", "UNITARIO", "P.UNIT", "IMPORT"]
+                    for keyword_contexto in [
+                        "CANT",
+                        "PRODUCTO",
+                        "TOTAL",
+                        "UNITARIO",
+                        "P.UNIT",
+                        "IMPORT",
+                    ]
                 ):
                     indice_primera_linea_datos = indice_linea + 1
                     while indice_primera_linea_datos < len(
@@ -148,13 +166,21 @@ class ProductExtractor:
         indice_inicio_escaneo = max(indice_inicio_productos, int(len(ocr_lines) * 0.3))
         for indice_linea in range(indice_inicio_escaneo, len(ocr_lines)):
             texto_linea_compacto = ocr_lines[indice_linea].upper().replace(" ", "")
-            texto_contexto_cercano = " ".join(ocr_lines[indice_linea : indice_linea + 3]).upper().replace(
-                " ", ""
+            texto_contexto_cercano = (
+                " ".join(ocr_lines[indice_linea : indice_linea + 3])
+                .upper()
+                .replace(" ", "")
             )
 
-            if "TIPOIVA" in texto_linea_compacto and "BASEIMPONIBLE" in texto_contexto_cercano:
+            if (
+                "TIPOIVA" in texto_linea_compacto
+                and "BASEIMPONIBLE" in texto_contexto_cercano
+            ):
                 return indice_linea
-            if "DESGLOSSAMENT" in texto_linea_compacto or "DESGLOSAMENT" in texto_linea_compacto:
+            if (
+                "DESGLOSSAMENT" in texto_linea_compacto
+                or "DESGLOSAMENT" in texto_linea_compacto
+            ):
                 return indice_linea
             if re.match(r"^\s*TOTAL\b", ocr_lines[indice_linea], re.IGNORECASE):
                 return indice_linea

@@ -11,7 +11,10 @@ class TotalExtractor:
         candidatos_total_puntuados = self._find_total_candidates(ocr_lines)
         if candidatos_total_puntuados:
             candidatos_total_puntuados.sort(
-                key=lambda entrada_candidata: (entrada_candidata[0], entrada_candidata[2]),
+                key=lambda entrada_candidata: (
+                    entrada_candidata[0],
+                    entrada_candidata[2],
+                ),
                 reverse=True,
             )
             return candidatos_total_puntuados[0][1]
@@ -62,7 +65,9 @@ class TotalExtractor:
         return candidatos_puntuados
 
     @staticmethod
-    def _score_candidate(indice_linea_candidata, es_total_aislado, es_total_iva, es_subtotal):
+    def _score_candidate(
+        indice_linea_candidata, es_total_aislado, es_total_iva, es_subtotal
+    ):
         puntuacion = 100 + indice_linea_candidata + (30 if es_total_aislado else 0)
         if es_total_iva:
             puntuacion -= 80
@@ -84,4 +89,6 @@ class TotalExtractor:
             for precio_candidato in precios_linea_candidata:
                 if precio_candidato > 0.5:
                     valores_numericos_plausibles.append(precio_candidato)
-        return max(valores_numericos_plausibles) if valores_numericos_plausibles else None
+        return (
+            max(valores_numericos_plausibles) if valores_numericos_plausibles else None
+        )

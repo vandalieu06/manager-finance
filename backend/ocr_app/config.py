@@ -7,7 +7,7 @@ from dataclasses import dataclass
 class OCRConfig:
     """Configuracion general para el OCR y preprocesado."""
 
-    ruta_imagen = './'
+    ruta_imagen = "./"
     umbral_min_confianza = 0.25
     lenguajes_ocr = None
     usa_gpu = False
@@ -28,4 +28,4 @@ class OCRConfig:
     def __post_init__(self):
         """Completa valores por defecto para la configuracion."""
         if self.lenguajes_ocr is None:
-            object.__setattr__(self, 'lenguajes_ocr', ['es'])
+            object.__setattr__(self, "lenguajes_ocr", ["es"])

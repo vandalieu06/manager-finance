@@ -12,7 +12,10 @@ class StoreExtractor:
 
     def extract(self, ocr_lines):
         texto_ocr_completo_mayus = " ".join(ocr_lines).upper()
-        for nombre_comercio_canonico, variantes_comercio_conocidas in self.known_stores.items():
+        for (
+            nombre_comercio_canonico,
+            variantes_comercio_conocidas,
+        ) in self.known_stores.items():
             if any(
                 variante_comercio in texto_ocr_completo_mayus
                 for variante_comercio in variantes_comercio_conocidas
@@ -26,12 +29,17 @@ class StoreExtractor:
             for linea_cabecera in ocr_lines[:12]
         ]
 
-        for nombre_comercio_canonico, variantes_comercio_conocidas in self.known_stores.items():
+        for (
+            nombre_comercio_canonico,
+            variantes_comercio_conocidas,
+        ) in self.known_stores.items():
             for variante_comercio in variantes_comercio_conocidas:
-                variante_comercio_normalizada = re.sub(
-                    r"[^A-Za-zÀ-ÿ\s]", "", variante_comercio
-                ).upper().strip()
-                for linea_cabecera_normalizada in lineas_candidatas_cabecera_normalizadas:
+                variante_comercio_normalizada = (
+                    re.sub(r"[^A-Za-zÀ-ÿ\s]", "", variante_comercio).upper().strip()
+                )
+                for (
+                    linea_cabecera_normalizada
+                ) in lineas_candidatas_cabecera_normalizadas:
                     if not linea_cabecera_normalizada:
                         continue
                     score_similitud = SequenceMatcher(

@@ -4,11 +4,10 @@ from core.ports.llm_port import LLMPort
 import requests
 
 
-
 class OllamaAdapter(LLMPort):
     """Adaptador que implementa LLMPort usando Ollama."""
 
-    def __init__(self, model_name = "llama3.2:1b", base_url = "http://localhost:11434"):
+    def __init__(self, model_name="llama3.2:1b", base_url="http://localhost:11434"):
         self.model_name = model_name
         self.base_url = base_url
 
@@ -24,9 +23,9 @@ class OllamaAdapter(LLMPort):
                     "model": self.model_name,
                     "prompt": prompt,
                     "stream": False,
-                    "format": "json"
+                    "format": "json",
                 },
-                timeout=60
+                timeout=60,
             )
             response.raise_for_status()
             result = response.json()
@@ -55,7 +54,7 @@ class OllamaAdapter(LLMPort):
         import re
 
         try:
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
+            json_match = re.search(r"\[.*\]", response, re.DOTALL)
             if json_match:
                 data = json.loads(json_match.group())
             else:
@@ -67,7 +66,7 @@ class OllamaAdapter(LLMPort):
                     nombre=item.get("nombre", ""),
                     precio_total=self._parse_float(item.get("precio_total")),
                     cantidad=self._parse_float(item.get("cantidad")),
-                    precio_unitario=self._parse_float(item.get("precio_unitario"))
+                    precio_unitario=self._parse_float(item.get("precio_unitario")),
                 )
                 if producto.nombre and producto.precio_total:
                     productos.append(producto)

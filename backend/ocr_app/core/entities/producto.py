@@ -13,8 +13,8 @@ class Producto:
     def to_dict(self):
         """Convierte el producto a diccionario."""
         return {
-            'nombre': self.nombre,
-            'precio_total': self.precio_total,
-            'cantidad': self.cantidad,
-            'precio_unitario': self.precio_unitario,
+            "nombre": self.nombre,
+            "precio_total": self.precio_total,
+            "cantidad": self.cantidad,
+            "precio_unitario": self.precio_unitario,
         }

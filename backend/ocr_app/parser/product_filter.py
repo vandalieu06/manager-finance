@@ -11,16 +11,16 @@ class ProductFilter:
         if not nombre_comercio_detectado:
             return productos_candidatos
 
-        nombre_comercio_normalizado = re.sub(
-            r"[^A-Za-zÀ-ÿ\s]", "", nombre_comercio_detectado
-        ).upper().strip()
+        nombre_comercio_normalizado = (
+            re.sub(r"[^A-Za-zÀ-ÿ\s]", "", nombre_comercio_detectado).upper().strip()
+        )
         palabras_comercio_normalizadas = set(nombre_comercio_normalizado.split())
 
         productos_filtrados = []
         for producto_candidato in productos_candidatos:
-            nombre_producto_normalizado = re.sub(
-                r"[^A-Za-zÀ-ÿ\s]", "", producto_candidato.nombre
-            ).upper().strip()
+            nombre_producto_normalizado = (
+                re.sub(r"[^A-Za-zÀ-ÿ\s]", "", producto_candidato.nombre).upper().strip()
+            )
             score_similitud_nombre_completo = SequenceMatcher(
                 None, nombre_producto_normalizado, nombre_comercio_normalizado
             ).ratio()
@@ -41,14 +41,22 @@ class ProductFilter:
                     cantidad_palabras_prefijo <= 2
                     and all(
                         any(
-                            SequenceMatcher(None, palabra_producto, palabra_comercio).ratio() > 0.7
+                            SequenceMatcher(
+                                None, palabra_producto, palabra_comercio
+                            ).ratio()
+                            > 0.7
                             for palabra_comercio in palabras_comercio_normalizadas
                         )
-                        for palabra_producto in palabras_nombre_producto[:cantidad_palabras_prefijo]
+                        for palabra_producto in palabras_nombre_producto[
+                            :cantidad_palabras_prefijo
+                        ]
                     )
                 )
 
-                if score_similitud_prefijo >= 0.75 or palabras_prefijo_coinciden_comercio:
+                if (
+                    score_similitud_prefijo >= 0.75
+                    or palabras_prefijo_coinciden_comercio
+                ):
                     nombre_limpio_sin_prefijo_comercio = " ".join(
                         palabras_nombre_producto[cantidad_palabras_prefijo:]
                     ).strip()
