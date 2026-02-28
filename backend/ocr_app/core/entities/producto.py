@@ -1,14 +1,15 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
 class Producto:
     """Representa un producto extraido del ticket."""
 
-    nombre = None
-    precio_total = None
-    cantidad = None
-    precio_unitario = None
+    nombre: Optional[str] = None
+    precio_total: Optional[float] = None
+    cantidad: Optional[float] = None
+    precio_unitario: Optional[float] = None
 
     def to_dict(self):
         """Convierte el producto a diccionario."""

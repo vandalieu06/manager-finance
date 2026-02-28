@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import logging
+
 import cv2
 import easyocr
 
 from ocr.preprocess import Preprocessor
+
+_logger = logging.getLogger(__name__)
 
 
 class OCREngine:
@@ -24,7 +28,7 @@ class OCREngine:
             imagen_preprocesada,
             detail=1,
             paragraph=False,
-            decoder="greedy",
+            decoder='greedy',
             batch_size=4,
         )
         lineas_filtradas_con_confianza = []
@@ -34,7 +38,7 @@ class OCREngine:
                 and texto_detectado.strip()
                 and float(confianza) >= self.config.umbral_min_confianza
             ):
-                texto_normalizado = " ".join(texto_detectado.split())
+                texto_normalizado = ' '.join(texto_detectado.split())
                 lineas_filtradas_con_confianza.append(
                     (texto_normalizado, float(confianza))
                 )
@@ -64,7 +68,7 @@ class OCREngine:
             imagen_con_mejor_nitidez,
             detail=1,
             paragraph=True,
-            decoder="beamsearch",
+            decoder='beamsearch',
         )
         lineas_detectadas = []
 
@@ -81,12 +85,15 @@ class OCREngine:
                 and texto_detectado.strip()
                 and float(confianza) >= self.config.umbral_min_confianza
             ):
-                lineas_detectadas.append(" ".join(texto_detectado.split()))
+                lineas_detectadas.append(' '.join(texto_detectado.split()))
         return lineas_detectadas
 
     # Ejecuta OCR multi-estrategia y devuelve lineas de texto.
     def ejecutar(self, imagen_bgr):
         """Ejecuta OCR con varias estrategias y retorna el mejor texto."""
+
+        _logger.info('Se ha ejecutado el OCR')
+
         versiones_preprocesadas = self.preprocessor.construir_versiones(imagen_bgr)
 
         resultados_por_estrategia = []
