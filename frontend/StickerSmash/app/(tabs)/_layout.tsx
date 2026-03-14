@@ -1,12 +1,11 @@
-import { Tabs } from "expo-router";
-
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Tabs } from "expo-router";
 
 export default function TabLayout() {
 	return (
 		<Tabs
 			screenOptions={{
-				tabBarActiveTintColor: "#ffd33d",
+				tabBarActiveTintColor: "#111111",
 			}}>
 			<Tabs.Screen
 				name="index"
@@ -28,9 +27,7 @@ export default function TabLayout() {
 					tabBarIcon: ({ color, focused }) => (
 						<Ionicons
 							name={
-								focused
-									? "information-circle"
-									: "information-circle-outline"
+								focused ? "information-circle" : "information-circle-outline"
 							}
 							color={color}
 							size={24}
@@ -39,12 +36,12 @@ export default function TabLayout() {
 				}}
 			/>
 			<Tabs.Screen
-				name="hola"
+				name="configProfile"
 				options={{
-					title: "Hola",
+					title: "Config Profile",
 					tabBarIcon: ({ color, focused }) => (
 						<Ionicons
-							name={focused ? "log-in" : "settings"}
+							name={focused ? "cog" : "cog-outline"}
 							color={color}
 							size={24}
 						/>
