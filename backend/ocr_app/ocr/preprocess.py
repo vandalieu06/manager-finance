@@ -3,8 +3,6 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
-from config import OCRConfig
-
 
 class Preprocessor:
     """Aplica distintas tecnicas de preprocesado a imagenes."""
@@ -168,20 +166,20 @@ class Preprocessor:
         imagen_orientada = self.orientar_vertical_si_horizontal(imagen_bgr)
         return [
             (
-                "Metodo 1: Escalado + Binarizacion",
+                'Metodo 1: Escalado + Binarizacion',
                 self.preprocesar_escalado_y_binarizacion_adaptativa(imagen_orientada),
             ),
             (
-                "Metodo 2: CLAHE agresivo",
+                'Metodo 2: CLAHE agresivo',
                 self.preprocesar_clahe_agresivo(imagen_orientada),
             ),
-            ("Metodo 3: Otsu", self.preprocesar_otsu(imagen_orientada)),
+            ('Metodo 3: Otsu', self.preprocesar_otsu(imagen_orientada)),
             (
-                "Metodo 4: Invertir si fondo oscuro",
+                'Metodo 4: Invertir si fondo oscuro',
                 self.preprocesar_invertir_si_fondo_oscuro(imagen_orientada),
             ),
             (
-                "Metodo 5: Foto movil (bilateral+CLAHE+deskew)",
+                'Metodo 5: Foto movil (bilateral+CLAHE+deskew)',
                 self.preprocesar_foto_movil(imagen_orientada),
             ),
         ]

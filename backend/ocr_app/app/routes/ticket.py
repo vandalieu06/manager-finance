@@ -45,6 +45,14 @@ def process_ticket():
         logger.error("No se pudo decodificar la imagen")
         return jsonify({"error": "No se pudo decodificar la imagen"}), 400
 
+    max_limit = 4000
+    height, width = image.shape[:2]
+
+    if max(height, width) > max_limit:
+        scale = max_limit / float(max(height, width))
+        image = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        logger.info(f"Imagen redimensionada a: {image.shape[1]}x{image.shape[0]}")
+
     try:
         logger.info("Inicializando OCR service...")
         service = get_ocr_service()

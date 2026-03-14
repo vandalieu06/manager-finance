@@ -7,6 +7,10 @@ name = "ocr-app"
 version = "0.1.0"
 description = "OCR application for processing tickets"
 requires-python = ">=3.10"
+dependencies = [
+    "dotenv>=0.9.9",
+    "openai>=2.26.0",
+]
 
 [tool.setuptools]
 packages = ["app", "core", "infrastructure", "ocr"]

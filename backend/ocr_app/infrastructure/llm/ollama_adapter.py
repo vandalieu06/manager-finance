@@ -1,9 +1,9 @@
 import json
 import logging
-import re
+import os
 from datetime import datetime
 
-import requests
+from openai import OpenAI
 
 from core.entities.producto import Producto
 from core.ports.llm_port import LLMPort
@@ -11,146 +11,99 @@ from core.ports.llm_port import LLMPort
 _logger = logging.getLogger(__name__)
 
 time_init = datetime.now()
-_logger.info(f"Se ha ejecutado el adapatador de ollama a las {time_init}")
+_logger.info(f'Se ha ejecutado el adapatador de ollama a las {time_init}')
 
 
 class OllamaAdapter(LLMPort):
     """Adaptador que implementa LLMPort usando Ollama."""
 
-    def __init__(self, model_name="llama3.1:8b", base_url="http://localhost:11434"):
-        self.model_name = model_name
-        self.base_url = base_url
+    def __init__(self):
+        self.model = os.getenv('MODEL_AI', 'sample')
+        self.base_url = os.getenv('OPENROUTER_URL_API', 'sample')
+        self.key = os.getenv('OPENROUTER_KEY', 'sample')
 
     def extract_products(self, ocr_text):
-        """Extrae productos del texto OCR usando Ollama."""
-        _logger.info(f"OllamaAdapter: Recibido texto OCR ({len(ocr_text)} caracteres)")
+        """Extrae productos del texto OCR usando OpenRouter"""
 
-        prompt = self._build_prompt(ocr_text)
-        _logger.info(f"OllamaAdapter: Prompt construido ({len(prompt)} caracteres)")
-
-        try:
-            _logger.info(
-                f"OllamaAdapter: Enviando solicitud a {self.base_url}/api/generate con modelo {self.model_name}"
-            )
-            response = requests.post(
-                f"{self.base_url}/api/generate",
-                json={
-                    "model": self.model_name,
-                    "prompt": prompt,
-                    "stream": False,
-                    "format": "json",
-                },
-                timeout=600,
-            )
-            _logger.info(
-                f"OllamaAdapter: Respuesta recibida. Status: {response.status_code}"
-            )
-            response.raise_for_status()
-            result = response.json()
-            _logger.info("OllamaAdapter: Parseando respuesta del LLM...")
-            return self._parse_llm_response(result.get("response", "[]"))
-        except requests.exceptions.RequestException as e:
-            _logger.exception("OllamaAdapter: Error comunicando con Ollama")
-            raise RuntimeError(f"Error comunicando con Ollama: {e}")
-
-    def _build_prompt(self, ocr_text):
-        return f"""Eres un asistente especializado en extraer información de tickets de compra en español.
-                Del siguiente texto extraído de un ticket, extrae todos los productos comprados.
-                Para cada producto proporciona:
-                - nombre: nombre del producto
-                - precio_total: precio total del producto (sin IVA)
-                - cantidad: número de unidades (si aplica, si no usar 1)
-                - precio_unitario: precio por unidad (si cantidad > 1)
-
-                Responde ÚNICAMENTE con un array JSON válido, sin texto adicional.
-
-                Texto del ticket:
-                {ocr_text}
-
-                Responde con el JSON:"""
-
-    def _parse_llm_response(self, response):
-        _logger.info(
-            f"OllamaAdapter: Respuesta cruda del LLM (primeros 500 chars): {response[:500]}"
+        system_instructions = (
+            'Eres un extractor de datos experto. Tu objetivo es convertir texto de tickets en JSON.\n'
+            'Reglas estrictas:\n'
+            '1. Extrae: nombre, precio_total (float), cantidad (int), precio_unitario (float).\n'
+            '2. Si el precio unitario no aparece, calcúlalo como precio_total / cantidad.\n'
+            '3. No incluyas impuestos (IVA) en el precio si puedes identificarlo.\n'
+            '4. Responde EXCLUSIVAMENTE con el objeto JSON, sin Markdown, sin explicaciones.'
         )
+        user_input = f'Texto del ticket:\n{ocr_text}\n\nGenera el JSON siguiendo el esquema solicitado.'
+
         try:
-            json_match = re.search(r"\[.*\]", response, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-            else:
-                data = json.loads(response)
+            client = OpenAI(base_url=self.base_url, api_key=self.key)
+
+            response = client.chat.completions.create(
+                model=self.model,
+                stream=False,
+                messages=[
+                    {'role': 'system', 'content': system_instructions},
+                    {
+                        'role': 'user',
+                        'content': user_input,
+                    },
+                ],
+                response_format={'type': 'json_object'},
+            )
+
+            raw_res = response.choices[0].message.content
+
+            return self._parse_llm_response(raw_res)
+
+        except Exception as e:
+            _logger.error(f'Error en la extracción de productos: {e}')
+            return []
+
+    def _parse_llm_response(self, raw_response):
+        """Convierte el string JSON del LLM en una lista de entidades Producto."""
+
+        if not raw_response:
+            return []
+
+        try:
+            clean_res = raw_response.replace('```json', '').replace('```', '').strip()
+            data = json.loads(clean_res)
+
+            items = []
 
             if isinstance(data, dict):
-                productos = []
-                for nombre, valores in data.items():
-                    if isinstance(valores, dict):
-                        producto = Producto(
-                            nombre,
-                            self._parse_float(valores.get("precio_total")),
-                            self._parse_float(valores.get("cantidad")),
-                            self._parse_float(valores.get("precio_unitario")),
-                        )
-                    else:
-                        producto = Producto(nombre, self._parse_float(valores), 1, None)
-                    if producto.nombre and producto.precio_total:
-                        productos.append(producto)
-                return productos
-
-            productos = []
-            for item in data:
-                producto = Producto(
-                    item.get("nombre"),
-                    self._parse_float(item.get("precio_total")),
-                    self._parse_float(item.get("cantidad")),
-                    self._parse_float(item.get("precio_unitario")),
+                items = (
+                    data.get('productos', []) if 'productos' in data else data.values()
                 )
-                if producto.nombre and producto.precio_total:
-                    productos.append(producto)
-            return productos
-        except (json.JSONDecodeError, ValueError) as e:
-            _logger.warning(
-                f"OllamaAdapter: Error con json estándar, intentando con ast.literal_eval: {e}"
-            )
-            try:
-                import ast
+            elif isinstance(data, list):
+                items = data
 
-                data = ast.literal_eval(response)
-                if isinstance(data, dict):
-                    productos = []
-                    for nombre, valores in data.items():
-                        if isinstance(valores, dict):
-                            producto = Producto(
-                                nombre,
-                                self._parse_float(valores.get("precio_total")),
-                                self._parse_float(valores.get("cantidad")),
-                                self._parse_float(valores.get("precio_unitario")),
-                            )
-                        else:
-                            producto = Producto(
-                                nombre, self._parse_float(valores), 1, None
-                            )
-                        if producto.nombre and producto.precio_total:
-                            productos.append(producto)
-                    return productos
+            productos_validados = []
 
-                productos = []
-                for item in data:
-                    producto = Producto(
-                        item.get("nombre"),
-                        self._parse_float(item.get("precio_total")),
-                        self._parse_float(item.get("cantidad")),
-                        self._parse_float(item.get("precio_unitario")),
-                    )
-                    if producto.nombre and producto.precio_total:
-                        productos.append(producto)
-                return productos
-            except Exception as e2:
-                raise RuntimeError(f"Error parseando respuesta de LLM: {e}")
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+
+                nuevo_producto = Producto(
+                    nombre=str(item.get('nombre', 'Desconocido')),
+                    precio_total=self._parse_float(item.get('precio_total')),
+                    cantidad=self._parse_float(item.get('cantidad', 1)),
+                    precio_unitario=self._parse_float(item.get('precio_unitario')),
+                )
+
+                if nuevo_producto.nombre and nuevo_producto.precio_total is not None:
+                    productos_validados.append(nuevo_producto)
+
+            return productos_validados
+
+        except json.JSONDecodeError as e:
+            _logger.error(f'Error al decodificar JSON del LLM: {e}')
+            return []
 
     def _parse_float(self, value):
         if value is None:
             return None
         try:
-            return float(value)
+            return float(str(value).replace(',', '.'))
         except (ValueError, TypeError):
             return None
