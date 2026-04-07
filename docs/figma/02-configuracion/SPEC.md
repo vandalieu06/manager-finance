@@ -185,6 +185,17 @@ Muestra "Iniciar sesión" prominent, menos opciones.
 - Spacing generoso (16px+ entre items)
 - Border radius 16px en cards
 
+### Colores (Tokens Figma)
+- Fondo: `base.white` (#FFFFFF)
+- Texto: `base.black` (#000000)
+- Bordes: `base.black` (#000000)
+- Primary: `primary.v1` (#4ECDC4) - turquesa
+- Éxito: `feedback.success.v1` (#22C55E)
+- Error: `feedback.danger.v1` (#EF4444)
+- Info: `feedback.info.v1` (#0EA5E9)
+
+> ⚠️ Importante: Primary cambió de azul a turquesa (#4ECDC4)
+
 ### Accesibilidad
 - Tappable areas de 44px mínimo
 - Contraste adecuado en texto

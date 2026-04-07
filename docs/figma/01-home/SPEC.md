@@ -93,11 +93,15 @@ Pantalla principal/dashboard de la app. Basada en `Final/Home Dashboard` del Fig
 - Labels: Red Hat Mono Medium 12px
 - Nav: Inter Black 10px uppercase
 
-### Colores
-- Fondo: #FFFFFF
-- Texto principal: #000000
-- Bordes: #000000
-- Sombras: #111111
+### Colores (Tokens actualizados Figma)
+- Fondo: `base.white` (#FFFFFF)
+- Texto principal: `base.black` (#000000)
+- Bordes: `base.black` (#000000)
+- Sombras: `base.black` (#000000)
+- Primary (marca): `primary.v1` (#4ECDC4) - turquesa
+- Accentos: `accent1.v1` (#FFE66D), `accent2.v1` (#FF6B6B), `feedback.warning.v1` (#F59E0B), `feedback.danger.v1` (#EF4444), `feedback.info.v1` (#0EA5E9)
+
+> ⚠️ Importante: El color de marca cambió de azul (#3B82F6) a turquesa (#4ECDC4)
 
 ### Borders & Shadows
 - border-2: 2px solid black

@@ -15,36 +15,116 @@ Lista de tareas con checkbox. Marcar [x] cuando esté hecho.
 
 ### 1.2 Design Tokens - UNIFICADOS SEGÚN FIGMA
 
-#### 📝 Tipografía (según análisis Figma)
+#### 📝 Tipografía (Tokens Figma)
 
-| Token | Familia | Uso | Peso | Tamaño |
-|-------|---------|-----|------|--------|
-| `font-display` | Red Hat Mono | Branding, títulos, métricas, labels | Bold (700) | 30-48px |
-| `font-body` | Red Hat Mono | Cuerpo, labels medianos, texto general | Medium (500) | 16-20px |
-| `font-label` | Red Hat Mono | Labels pequeñas, textos secundarios | Medium (500) | 12px |
-| `font-nav` | Inter | Navegación inferior | Black (900) | 10px uppercase |
-| `font-chart` | Inter | Etiquetas del gráfico | Bold (700) | 12px uppercase |
+| Token | Familia | Tamaño |
+|-------|---------|--------|
+| `font-primary` | Red Hat Mono | variable |
+| `font-secondary` | Inter | variable |
+
+##### Tamaños de fuente (global.fontSize)
+| Token | Valor | Uso típico |
+|-------|-------|------------|
+| `3xs` | 8px | - |
+| `2xs` | 10px | micro labels |
+| `xs` | 12px | labels, nav |
+| `sm` | 14px | body pequeño |
+| `base` | 16px | body estándar |
+| `lg` | 18px | body grande |
+| `xl` | 20px | - |
+| `2xl` | 24px | - |
+| `3xl` | 30px | h2, display |
+| `4xl` | 36px | - |
+| `5xl` | 48px | h1, títulos grandes |
+| `6xl` | 60px | - |
+| `7xl` | 72px | - |
+
+##### Espaciado (global.spacing)
+| Token | Valor |
+|-------|-------|
+| `px` | 1px |
+| `s0_5` | 2px |
+| `s1` | 4px |
+| `s1_5` | 6px |
+| `s2` | 8px |
+| `s2_5` | 10px |
+| `s3` | 12px |
+| `s4` | 16px |
+| `s5` | 20px |
+| `s6` | 24px |
+| `s8` | 32px |
+| `s10` | 40px |
+| `s12` | 48px |
+| `s16` | 64px |
+| `s20` | 80px |
+| `s32` | 128px |
+
+##### Tokens específicos móvil (movil)
+| Token | Valor |
+|-------|-------|
+| `h1_display_size` | 48px |
+| `h2_display_size` | 30px |
+| `body_standard_size` | 16px |
+| `data_tech_standard_size` | 14px |
+| `label_tech_bold_size` | 12px |
+| `micro_tech_nano_size` | 10px |
+| `border_brutal` | 3px |
+| `padding_container` | 20px |
 
 **Regla unificada:** 
-- ✅ **Red Hat Mono** para todo excepto navegación e labels de gráfico
-- ✅ **Inter** solo para nav y gráfico
+- ✅ **Red Hat Mono** (`font-primary`) para todo excepto navegación e labels de gráfico
+- ✅ **Inter** (`font-secondary`) solo para nav y gráfico
 
-#### 🎨 Colores (según análisis Figma)
+#### 🎨 Colores (según análisis Figma - JSON Tokens actualizado)
 
+##### Colores Base
 | Token | Valor | Uso |
 |-------|-------|-----|
-| `white` | `#FFFFFF` | Fondo principal |
-| `black` | `#000000` | Texto, bordes |
-| `black-soft` | `#111111` | Sombras |
-| `brand.primary` | `#3B82F6` | Acento principal, botones icono, nav activo |
-| `brand.secondary` | `#FFFF00` | Botón secundario |
-| `accent.1` | `#00FF00` | Barra gráfico (Vaijes) |
-| `accent.2` | `#EC4899` | Barra gráfico (Otros), tarjeta rosa |
-| `accent.3` | `#06B6D4` | (cyan) |
-| `feedback.success` | `#22C55E` | Botones icono verde, texto positivo |
-| `feedback.warning` | `#F59E0B` | Barra gráfico Tech |
-| `feedback.danger` | `#EF4444` | Barra Bills, tarjeta roja, comparación negativa |
-| `feedback.info` | `#0EA5E9` | Tarjeta azul inferior |
+| `base.white` | `#FFFFFF` | Fondo principal |
+| `base.black` | `#000000` | Texto, bordes |
+
+##### Colores de Marca
+| Token | Valor | Uso |
+|-------|-------|-----|
+| `primary.v1` | `#4ECDC4` | Acento principal, marca, nav activo (turquesa) |
+| `primary.v2` | `#81DBD5` | Variante clara |
+| `primary.v3` | `#B3EAE6` | Variante más clara |
+| `primary.v4` | `#E6F8F7` | Fondo suave |
+| `secondary.v1` | `#1A535C` | Secundario, texto sobre claros |
+| `secondary.v2` | `#578188` | Variante |
+| `secondary.v3` | `#94B0B4` | Variante |
+| `secondary.v4` | `#D1DEE0` | Fondo |
+
+##### Colores de Acento
+| Token | Valor | Uso |
+|-------|-------|-----|
+| `accent1.v1` | `#FFE66D` | Amarillo - gráficos, destacado |
+| `accent2.v1` | `#FF6B6B` | Coral/Rosa - alertas, énfasis |
+| `accent3.v1` | `#F7FFF7` | Verde muy claro - backgrounds |
+
+##### Colores de Feedback (v1 = default, v2-v4 = variantes claras)
+| Token | Valor | Uso |
+|-------|-------|-----|
+| `feedback.success.v1` | `#22C55E` | Éxito, positivo |
+| `feedback.success.v2-v4` | `#76DE9A` → `#DFF9ED` | Variantes claras |
+| `feedback.danger.v1` | `#EF4444` | Error, peligro |
+| `feedback.danger.v2-v4` | `#ED7272` → `#E9C4C4` | Variantes claras |
+| `feedback.warning.v1` | `#F59E0B` | Advertencia |
+| `feedback.warning.v2-v4` | `#F8BD54` → `#FCEECF` | Variantes claras |
+| `feedback.info.v1` | `#0EA5E9` | Información |
+| `feedback.info.v2-v4` | `#68C1EF` → `#D8F0FA` | Variantes claras |
+
+##### Colores de Categorías (50/30/20) - NUEVO
+| Token | Valor | Grupo |
+|-------|-------|-------|
+| `category_obligacion.v1` | `#4F46E5` | Obligación (50%) |
+| `category_obligacion.v2-v4` | `#7F79ED` → `#E0DFFC` | Variantes |
+| `category_ocio.v1` | `#A855F7` | Ocio (30%) |
+| `category_ocio.v2-v4` | `#C185FA` → `#F2E6FF` | Variantes |
+| `category_ahorro.v1` | `#10B981` | Ahorros (20%) |
+| `category_ahorro.v2-v4` | `#53CDA5` → `#D8F6ED` | Variantes |
+
+> ⚠️ **IMPORTANTE**: Los tokens antiguos (`brand.primary`, `brand.secondary`, `accent.1`, `accent.2`, `accent.3`) se han actualizado. Usar siempre `primary.v1` paraturquesa, no el azul anterior.
 
 #### 📏 Spacing (según análisis Figma)
 
@@ -244,3 +324,4 @@ FASE 6-7: Polish     ░░░░░░░░░░░░   0%
 ---
 
 *6 Abril 2026 - Actualizado con análisis estético del Figma*
+*7 Abril 2026 - Tokens actualizados según JSON Figma*

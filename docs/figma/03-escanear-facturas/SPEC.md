@@ -238,6 +238,18 @@ El usuario elige cómo introducir datos.
 - Espaciado generoso
 - Bordes visibles en zonas de input
 
+### Colores (Tokens Figma)
+- Fondo: `base.white` (#FFFFFF)
+- Texto: `base.black` (#000000)
+- Primary: `primary.v1` (#4ECDC4) - turquesa
+- Éxito: `feedback.success.v1` (#22C55E)
+- Error: `feedback.danger.v1` (#EF4444)
+- Warning: `feedback.warning.v1` (#F59E0B)
+- Info: `feedback.info.v1` (#0EA5E9)
+- Categorías: `category_obligacion.v1`, `category_ocio.v1`, `category_ahorro.v1`
+
+> ⚠️ Importante: Primary cambió de azul a turquesa (#4ECDC4)
+
 ### UX - Flujo Natural
 1. Seleccionar modo → 2. Introducir datos → 3. Revisar → 4. Guardar
 

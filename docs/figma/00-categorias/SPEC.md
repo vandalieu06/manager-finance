@@ -13,37 +13,39 @@ Sistema de categorías basado en la regla financiera 50/30/20:
 ### 1. OBLIGACIÓN (50%)
 Gastos necesarios para vivir
 
-| Subcategoría | Icono | Color |
-|--------------|-------|-------|
-| Supermercado | 🛒 | brand.primary |
-| Facturas | 💡 | brand.secondary |
-| Transporte | 🚌 | accent.3 |
-| Salud | 💊 | feedback.danger |
-| Hogar | 🏠 | accent.2 |
+| Subcategoría | Icono | Color Token |
+|--------------|-------|-------------|
+| Supermercado | 🛒 | `category_obligacion.v1` (#4F46E5) |
+| Facturas | 💡 | `secondary.v1` (#1A535C) |
+| Transporte | 🚌 | `primary.v1` (#4ECDC4) |
+| Salud | 💊 | `feedback.danger.v1` (#EF4444) |
+| Hogar | 🏠 | `accent2.v1` (#FF6B6B) |
 
 ### 2. OCIO (30%)
 Wants + Essentials & Care
 
-| Subcategoría | Icono | Color |
-|--------------|-------|-------|
-| Restaurantes | 🍽️ | accent.2 |
-| Entretenimiento | 🎮 | accent.1 |
-| Cine | 🎬 | brand.primary |
-| Viajes | ✈️ | accent.3 |
+| Subcategoría | Icono | Color Token |
+|--------------|-------|-------------|
+| Restaurantes | 🍽️ | `accent2.v1` (#FF6B6B) |
+| Entretenimiento | 🎮 | `accent1.v1` (#FFE66D) |
+| Cine | 🎬 | `primary.v1` (#4ECDC4) |
+| Viajes | ✈️ | `category_ocio.v1` (#A855F7) |
 | **EyC** | | |
-| Higiene personal | 🧴 | feedback.info |
-| Cuidado personal | 💅 | feedback.warning |
-| Bebidas | ☕ | accent.2 |
-| Ropa | 👕 | accent.1 |
-| Snacks | 🍿 | feedback.warning |
+| Higiene personal | 🧴 | `feedback.info.v1` (#0EA5E9) |
+| Cuidado personal | 💅 | `feedback.warning.v1` (#F59E0B) |
+| Bebidas | ☕ | `accent2.v1` (#FF6B6B) |
+| Ropa | 👕 | `accent1.v1` (#FFE66D) |
+| Snacks | 🍿 | `feedback.warning.v1` (#F59E0B) |
 
 ### 3. AHORROS (20%)
 Seguimiento de reservas/inversiones
 
-| Subcategoría | Icono | Color |
-|--------------|-------|-------|
-| Ahorros | 💰 | feedback.success |
-| Inversiones | 📈 | feedback.success |
+| Subcategoría | Icono | Color Token |
+|--------------|-------|-------------|
+| Ahorros | 💰 | `category_ahorro.v1` (#10B981) |
+| Inversiones | 📈 | `category_ahorro.v1` (#10B981) |
+
+> ⚠️ **Importante**: Los colores de categoría usan los nuevos tokens (`category_obligacion.v1`, `category_ocio.v1`, `category_ahorro.v1`) con variantes v2-v4 disponibles para estados hover/selected.
 
 ---
 

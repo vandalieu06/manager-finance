@@ -102,4 +102,15 @@ Pantalla secundaria de exploración/listado. Basada en `Final/productos` del Fig
 
 ---
 
+### Colores (Tokens actualizados Figma)
+- Fondo: `base.white` (#FFFFFF)
+- Texto: `base.black` (#000000)
+- Bordes: `base.black` (#000000)
+- Primary: `primary.v1` (#4ECDC4) - turquesa
+- Placeholder: #404040
+
+> ⚠️ Importante: El color de marca cambió de azul a turquesa (#4ECDC4)
+
+---
+
 *6 Abril 2026 - Basado en análisis real del Figma*
