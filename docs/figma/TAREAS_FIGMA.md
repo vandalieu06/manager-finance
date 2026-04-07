@@ -173,8 +173,8 @@ Lista de tareas con checkbox. Marcar [x] cuando esté hecho.
 
 ### 2.1 Botones
 - [x] ✅ Button Icon (44x44px, border 2px, shadow-sm)
-- [x] ✅ Button Secondary (amarillo, border 4px, shadow-md)
-- [x] ✅ Button Primary (brand.primary)
+- [x] ✅ Button Secondary (amarillo accent1.v1, border 4px, shadow-md)
+- [x] ✅ Button Primary (primary.v1 - turquesa #4ECDC4)
 
 ### 2.2 Inputs
 - [x] ✅ Input con label (358x69px, label 18px, caja 40px, border 4px)
@@ -185,14 +185,14 @@ Lista de tareas con checkbox. Marcar [x] cuando esté hecho.
 
 ### 2.4 Contenedores
 - [x] ✅ Card Dashboard (border 3px, shadow-md, padding 30px-17px)
-- [x] ✅ Card Análisis (fondo azul, border 3px, shadow-lg)
+- [x] ✅ Card Análisis (fondo primary.v1 turquesa, border 3px, shadow-lg)
 - [x] ✅ Card Stat (icon container 2px, label 12px, valor 40px)
 
 ### 2.5 Datos
 - [x] ✅ List Item / Ranking Item (350px width, 50px height)
 
 ### 2.6 Gráficos
-- [x] ✅ Gráfico de barras (categorías: Comida, Vaijes, Tech, Bills, Otros)
+- [x] ✅ Gráfico de barras (categorías: Comida, Viajes, Tech, Bills, Otros)
 
 ---
 
@@ -214,7 +214,7 @@ Lista de tareas con checkbox. Marcar [x] cuando esté hecho.
 ### 4.1 Home (Dashboard) ✅ HECHO
 - [x] ✅ Header con logo "lumen" + 2 botones icono
 - [x] ✅ Bloque "Bienvenido de nuevo" + "FEBRUARY 2024" + "Check status"
-- [x] ✅ Gráfico de barras por categorías (Comida, Vaijes, Tech, Bills, Otros)
+- [x] ✅ Gráfico de barras por categorías (Comida, Viajes, Tech, Bills, Otros)
 - [x] ✅ Tarjeta de análisis ("Analysis", 24%, "Alto", "Más que el mes pasado")
 - [x] ✅ Grid de cards estadísticas (Total Spent, $4,250.00)
 - [x] ✅ Bottom Navigation (4 tabs: Actividad repetido, iconos: casa, lista, qr, settings)
@@ -256,11 +256,11 @@ Lista de tareas con checkbox. Marcar [x] cuando esté hecho.
 - [x] ✅ Ocio (30%): Restaurantes, Entretenimiento, Cine, Viajes, EyC
 - [x] ✅ Ahorros (20%): Transfers, inversiones
 
-### Componentes de Categorías
-- [ ] Category Badge
-- [ ] Category Selector
-- [ ] Filter Chips
-- [ ] Budget Progress Widget
+### Componentes de Categorías ⚠️ PENDIENTE EN FIGMA (SPEC CREADO en 00-categorias/SPEC.md)
+- [ ] Category Badge (spec en 00-categorias/SPEC.md)
+- [ ] Category Selector (spec en 00-categorias/SPEC.md)
+- [ ] Filter Chips (spec en 00-categorias/SPEC.md)
+- [ ] Budget Progress Widget (spec en 00-categorias/SPEC.md)
 
 ---
 
@@ -313,7 +313,7 @@ FASE 6-7: Polish     ░░░░░░░░░░░░   0%
 - [ ] "Check status" → texto final
 
 ### Errores → Corregir
-- [ ] "Vaijes" → "Viajes"
+- [x] ✅ "Vaijes" → "Viajes" (CORREGIDO)
 
 ### Naming → Decidir
 - [ ] ¿Usar "Lumen" o "Manager Finance" como nombre final?
@@ -325,3 +325,4 @@ FASE 6-7: Polish     ░░░░░░░░░░░░   0%
 
 *6 Abril 2026 - Actualizado con análisis estético del Figma*
 *7 Abril 2026 - Tokens actualizados según JSON Figma*
+*7 Abril 2026 - Tareas actualizadas (correcciones aplicadas)*

@@ -21,7 +21,7 @@ Pantalla principal/dashboard de la app. Basada en `Final/Home Dashboard` del Fig
 
 ### 3. Gráfico Principal
 - **Tipo**: Gráfico de barras verticales geométricas
-- **Categorías**: Comida, **Vaijes** (⚠️ error - debe ser "Viajes"), Tech, Bills, Otros
+- **Categorías**: Comida, **Viajes**, Tech, Bills, Otros
 - **Colores**: brand.primary (Comida), accent.1 (Vaijes), feedback.warning (Tech), feedback.danger (Bills), accent.2 (Otros)
 - **Labels**: Inter Bold 12px uppercase
 
@@ -74,7 +74,7 @@ Pantalla principal/dashboard de la app. Basada en `Final/Home Dashboard` del Fig
 | Problema | Ubicación |
 |----------|------------|
 | Mezcla ES/EN | "Bienvenido de nuevo" (ES) + "Analysis", "Check status", "Total Spent" (EN) |
-| Error ortográfico | "Vaijes" → "Viajes" |
+| Error ortográfico | ~~"Vaijes"~~ → "Viajes" ✅ CORREGIDO |
 | Labels no cerrados | Bottom nav dice "Actividad" repetido |
 | Placeholders | "Card 01", "Total Spent" no son finales |
 
@@ -114,3 +114,4 @@ Pantalla principal/dashboard de la app. Basada en `Final/Home Dashboard` del Fig
 ---
 
 *6 Abril 2026 - Basado en análisis real del Figma*
+*7 Abril 2026 - Tareas actualizadas (token colors + error ortográfico corregido)*
