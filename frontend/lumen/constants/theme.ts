@@ -3,51 +3,51 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-import { Platform } from 'react-native';
+import { Platform } from "react-native";
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
+// constants/colors.ts
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
+	brand: {
+		primario: "#3B82F6",
+		secundario: "#FFFF00",
+		accento1: "#00FF00",
+		accento2: "#EC4899",
+		accento3: "#06B6D4",
+	},
+	info: {
+		success: "#00FF00",
+		info: "#0EA5E9",
+		warning: "#F59E0B",
+		danger: "#EF4444",
+	},
+  bn:{
+    blanco: "#FFFFFF",
+    negro: "#000000"
+  }
 };
 
 export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
+	ios: {
+		/** iOS `UIFontDescriptorSystemDesignDefault` */
+		sans: "system-ui",
+		/** iOS `UIFontDescriptorSystemDesignSerif` */
+		serif: "ui-serif",
+		/** iOS `UIFontDescriptorSystemDesignRounded` */
+		rounded: "ui-rounded",
+		/** iOS `UIFontDescriptorSystemDesignMonospaced` */
+		mono: "ui-monospace",
+	},
+	default: {
+		sans: "normal",
+		serif: "serif",
+		rounded: "normal",
+		mono: "monospace",
+	},
+	web: {
+		sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+		serif: "Georgia, 'Times New Roman', serif",
+		rounded:
+			"'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
+		mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+	},
 });
