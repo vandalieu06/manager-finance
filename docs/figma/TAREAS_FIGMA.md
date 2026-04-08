@@ -233,7 +233,8 @@ Lista de tareas con checkbox. Marcar [x] cuando esté hecho.
 - [ ] Por crear en Figma
 - [ ] Header
 - [ ] Perfil usuario
-- [ ] Ajustes (moneda, notificaciones, categorías)
+- [ ] Configuración de la App (moneda, notificaciones internas, categorías)
+- [ ] Permisos del Sistema (cámara, almacenamiento, notificaciones, ubicación)
 - [ ] Datos (exportar, importar, eliminar cuenta)
 - [ ] Información (versión, términos, privacidad)
 - [ ] Ayuda/FAQ

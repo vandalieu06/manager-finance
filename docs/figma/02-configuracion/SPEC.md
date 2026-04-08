@@ -1,10 +1,11 @@
 # SPEC - Pantalla Configuración
 
 ## Descripción General
-Pantalla de configuración y gestión de la cuenta del usuario. Permite modificar perfil, ajustar preferencias, acceder a ayuda y gestionar datos.
+Pantalla de configuración y gestión de la cuenta del usuario. Permite modificar perfil, ajustar preferencias, gestionar permisos del sistema, acceder a ayuda y gestionar datos.
 
 ## Propósito
 - Permitir al usuario gestionar su perfil y preferencias
+- Controlar permisos del sistema operativo (cámara, almacenamiento, notificaciones)
 - Proporcionar acceso a funcionalidades de exportación de datos
 - Ofrecer soporte y ayuda
 - Configurar aspectos de la aplicación
@@ -14,7 +15,7 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 ## Apartados de la Pantalla
 
 ### 1. Perfil de Usuario
-**Ubicación**: Primera sección, más prominent
+**Ubicación**: Primera sección, más prominente
 
 **Contenido:**
 - **Avatar**: Imagen de perfil (circular) o iniciales
@@ -30,7 +31,9 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 - Botón: Guardar cambios
 - Botón: Cancelar
 
-### 2. Ajustes Generales
+---
+
+### 2. Configuración de la App
 
 #### 2.1 Preferencias
 | Ajuste | Tipo | Opciones |
@@ -39,7 +42,7 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 | Idioma | Selector | Español, Inglés... |
 | Tema | Toggle | Claro / Oscuro (si aplica) |
 
-#### 2.2 Notificaciones
+#### 2.2 Notificaciones (internas de la app)
 | Ajuste | Tipo | Descripción |
 |--------|------|-------------|
 | Notificaciones push | Toggle | Activar/desactivar |
@@ -52,16 +55,88 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 - **Editar categoría**: Modificar nombre/color/icono
 - **Eliminar categoría**: Borrar categoría (con confirmación)
 
-### 3. Datos y Privacidad
+---
 
-#### 3.1 Gestión de Datos
+### 3. Permisos del Sistema
+
+Gestión de permisos nativos del dispositivo. Estos permisos son independientes de las preferencias de notificaciones internas.
+
+#### 3.1 Permisos disponibles
+
+| Permiso | Descripción | Necesario para |
+|---------|-------------|----------------|
+| **Cámara** | Acceso a la cámara del dispositivo | Escanear facturas/tickets |
+| **Almacenamiento** | Acceso a fotos y archivos | Guardar/exportar datos |
+| **Notificaciones** | Permiso de notificaciones nativas | Recibir notificaciones push |
+| **Ubicación** (opcional) | Acceso a ubicación | Etiquetar gastos por ubicación |
+
+#### 3.2 Estados de permisos
+
+| Estado | Indicador Visual | Descripción |
+|--------|------------------|-------------|
+| **Concedido** | ✓ Verde | Permiso activo |
+| **Denegado** | ⚠️ Amarillo | Permiso denegado por el usuario |
+| **Sin solicitar** | ○ Gris | Nunca se ha pedido el permiso |
+| **Restringido** | 🔒 Gris | Restringido por el sistema (ej: menores) |
+
+#### 3.3 Interacción con permisos
+
+Al hacer tap en un permiso:
+- **Concedido**: Abrir configuración del sistema para gestionar
+- **Denegado**: Mostrar modal con opción de "Abrir Settings" del sistema
+- **Sin solicitar**: Solicitar permiso automáticamente (first request)
+
+#### 3.4 Diseño UI de Permisos
+
+```
+┌─────────────────────────────────────────────────┐
+│ PERMISOS DEL SISTEMA                            │
+├─────────────────────────────────────────────────┤
+│ 📷 Cámara                    [✓ Concedido]     │
+│    Necesario para escanear facturas             │
+├─────────────────────────────────────────────────┤
+│ 📁 Almacenamiento           [✓ Concedido]      │
+│    Guardar y exportar tus datos                 │
+├─────────────────────────────────────────────────┤
+│ 🔔 Notificaciones            [⚠️ Denegado]     │
+│    Activar para recibir alertas      [Activar] │
+├─────────────────────────────────────────────────┤
+│ 📍 Ubicación                 [○ No solicitado]  │
+│    Etiquetar gastos por lugar         [Solicitar]│
+└─────────────────────────────────────────────────┘
+```
+
+#### 3.5 UX - Flujo de solicitud de permisos
+
+1. **Primera vez**: Solicitar permiso con explicación clara del uso
+2. **Si denegado**: Mostrar banner/modal explicando por qué es necesario
+3. **Permanentemente denegado**: Botón para abrir Settings del sistema
+
+**Modal de explicación** (antes de solicitar):
+```
+┌─────────────────────────────────────────┐
+│ 📷 Necesitamos acceso a tu cámara       │
+├─────────────────────────────────────────┤
+│ Para escanear tickets y extraer         │
+│ automáticamente los productos de        │
+│ tus compras.                            │
+│                                         │
+│ [Cancelar]          [Permitir]          │
+└─────────────────────────────────────────┘
+```
+
+---
+
+### 4. Datos y Privacidad
+
+#### 4.1 Gestión de Datos
 | Función | Descripción |
 |---------|-------------|
 | Exportar datos | Descargar todos los datos (CSV/JSON) |
 | Importar datos | Cargar datos desde archivo |
 | Sincronizar | Sincronizar con nube (si hay cuenta premium) |
 
-#### 3.2 Privacidad
+#### 4.2 Privacidad
 | Función | Descripción |
 |---------|-------------|
 | Ver política de privacidad | PDF/Link a política |
@@ -73,7 +148,7 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 - Campo: Escribir "ELIMINAR" para confirmar
 - Botón: Confirmar eliminación
 
-### 4. Información de la App
+### 5. Información de la App
 
 | Item | Descripción |
 |------|-------------|
@@ -82,7 +157,7 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 | Licencias | Licencias de código abierto |
 | Changelog | Historial de versiones |
 
-### 5. Ayuda y Soporte
+### 6. Ayuda y Soporte
 
 | Item | Descripción |
 |------|-------------|
@@ -150,6 +225,24 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 └─────────────────────────────┘
 ```
 
+### Permission Item (Estados)
+```
+┌─────────────────────────────────────────┐
+│ 📷 Cámara              [✓ Concedido]   │
+│    Necesario para escanear facturas     │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│ 🔔 Notificaciones   [⚠️ Denegado]     │
+│    Activar para recibir alertas [Activar]│
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│ 📍 Ubicación       [○ No solicitado]   │
+│    Etiquetar gastos por lugar   [Solicitar]│
+└─────────────────────────────────────────┘
+```
+
 ---
 
 ## Estados de la Pantalla
@@ -215,12 +308,18 @@ Muestra "Iniciar sesión" prominent, menos opciones.
 ├── Perfil
 │   └── [Editar perfil] → Formulario → Guardar/Cancelar
 │
-├── Ajustes
+├── Configuración de la App
 │   ├── Preferencias (moneda, idioma, tema)
-│   ├── Notificaciones (toggles)
+│   ├── Notificaciones (toggles internos)
 │   └── Categorías → Gestión de categorías
 │
-├── Datos
+├── Permisos del Sistema
+│   ├── Cámara → Solicitar/Abrir Settings
+│   ├── Almacenamiento → Solicitar/Abrir Settings
+│   ├── Notificaciones → Solicitar/Abrir Settings
+│   └── Ubicación (opcional) → Solicitar/Abrir Settings
+│
+├── Datos y Privacidad
 │   ├── Exportar → [Selector formato] → Descarga
 │   ├── Importar → [Selector archivo]
 │   └── Eliminar cuenta → [Confirmación] → Modal warning
@@ -237,14 +336,50 @@ Muestra "Iniciar sesión" prominent, menos opciones.
 
 ---
 
-## Notas de Implementación React Native
+## Notas de Implementación React Native / Expo
 
+### Configuración General
 - Usar `FlatList` para ajustes (mejor performance)
 - SectionList para grouping
 - Switch para toggles
 - Modal para confirmaciones
 - WebView para documentos externos (T&C, privacidad)
 - Share API para exportar archivos
+
+### Gestión de Permisos
+
+**Librerías recomendadas (Expo):**
+- `expo-camera`: Permiso de cámara
+- `expo-media-library`: Permiso de almacenamiento
+- `expo-notifications`: Permiso de notificaciones
+- `expo-location`: Permiso de ubicación
+
+**Librerías recomendadas (React Native CLI):**
+- `react-native-permissions`: Gestor unificado de permisos
+- `react-native Linking` + `Settings`: Abrir Settings del sistema
+
+**Ejemplo de flujo de verificación:**
+```typescript
+const checkPermission = async (permission: string) => {
+  const status = await Permissions.getAsync(permission);
+  return status.status; // 'granted' | 'denied' | 'undetermined'
+};
+
+const requestPermission = async (permission: string) => {
+  const { status } = await Permissions.askAsync(permission);
+  return status;
+};
+
+const openSettings = () => {
+  Linking.openSettings();
+};
+```
+
+**Patrón de UX para permisos:**
+1. Verificar estado actual al entrar en pantalla
+2. Si "undetermined", mostrar UI neutral con botón "Solicitar"
+3. Si "denied", mostrar UI de advertencia con botón "Activar" → abrir Settings
+4. Si "granted", mostrar UI de éxito con opción de gestionar
 
 ---
 
@@ -256,4 +391,5 @@ Muestra "Iniciar sesión" prominent, menos opciones.
 ---
 
 *Especificación creada: 6 de Abril de 2026*
-*Versión: 1.0*
+*Última actualización: 8 de Abril de 2026*
+*Versión: 1.1*
