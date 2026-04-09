@@ -14,7 +14,9 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 
 ## Apartados de la Pantalla
 
-### 1. Perfil de Usuario
+### Configuración de la App (config)
+
+#### perfil
 **Ubicación**: Primera sección, más prominente
 
 **Contenido:**
@@ -33,23 +35,25 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 
 ---
 
-### 2. Configuración de la App
-
-#### 2.1 Preferencias
+#### preferencias
 | Ajuste | Tipo | Opciones |
 |--------|------|----------|
 | Moneda | Selector | EUR, USD, GBP... |
 | Idioma | Selector | Español, Inglés... |
 | Tema | Toggle | Claro / Oscuro (si aplica) |
 
-#### 2.2 Notificaciones (internas de la app)
+---
+
+#### notificaciones
 | Ajuste | Tipo | Descripción |
 |--------|------|-------------|
 | Notificaciones push | Toggle | Activar/desactivar |
 | Recordatorios | Toggle | Recordar escanear |
 | Resumen semanal | Toggle | Envío semanal de resumen |
 
-#### 2.3 Categorías
+---
+
+#### categorías
 - **Ver categorías**: Lista de categorías existentes
 - **Añadir categoría**: Crear nueva categoría personalizada
 - **Editar categoría**: Modificar nombre/color/icono
@@ -57,21 +61,35 @@ Pantalla de configuración y gestión de la cuenta del usuario. Permite modifica
 
 ---
 
-### 3. Permisos del Sistema
+#### Datos
+| Función | Descripción |
+|---------|-------------|
+| Exportar datos | Descargar todos los datos (CSV/JSON) |
+| Importar datos | Cargar datos desde archivo |
+| Sincronizar | Sincronizar con nube (si hay cuenta premium) |
 
-Gestión de permisos nativos del dispositivo. Estos permisos son independientes de las preferencias de notificaciones internas.
+---
 
-#### 3.1 Permisos disponibles
+#### información
+| Item | Descripción |
+|------|-------------|
+| Versión | Número de versión actual (ej: v1.0.0) |
+| Construido | Fecha de compilación |
+| Licencias | Licencias de código abierto |
+| Changelog | Historial de versiones |
 
-| Permiso | Descripción | Necesario para |
-|---------|-------------|----------------|
-| **Cámara** | Acceso a la cámara del dispositivo | Escanear facturas/tickets |
-| **Almacenamiento** | Acceso a fotos y archivos | Guardar/exportar datos |
-| **Notificaciones** | Permiso de notificaciones nativas | Recibir notificaciones push |
-| **Ubicación** (opcional) | Acceso a ubicación | Etiquetar gastos por ubicación |
+---
 
-#### 3.2 Estados de permisos
+### Permisos de la app
 
+Gestión de permisos nativos del dispositivo.
+
+| Cámara | Acceso a la cámara del dispositivo | Escanear facturas/tickets |
+| Almacenamiento | Acceso a fotos y archivos | Guardar/exportar datos |
+| Notificaciones | Permiso de notificaciones nativas | Recibir notificaciones push |
+| Ubicación (opcional) | Acceso a ubicación | Etiquetar gastos por ubicación |
+
+#### Estados de permisos
 | Estado | Indicador Visual | Descripción |
 |--------|------------------|-------------|
 | **Concedido** | ✓ Verde | Permiso activo |
@@ -79,14 +97,14 @@ Gestión de permisos nativos del dispositivo. Estos permisos son independientes 
 | **Sin solicitar** | ○ Gris | Nunca se ha pedido el permiso |
 | **Restringido** | 🔒 Gris | Restringido por el sistema (ej: menores) |
 
-#### 3.3 Interacción con permisos
+#### Interacción con permisos
 
 Al hacer tap en un permiso:
 - **Concedido**: Abrir configuración del sistema para gestionar
 - **Denegado**: Mostrar modal con opción de "Abrir Settings" del sistema
 - **Sin solicitar**: Solicitar permiso automáticamente (first request)
 
-#### 3.4 Diseño UI de Permisos
+#### Diseño UI de Permisos
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -106,7 +124,7 @@ Al hacer tap en un permiso:
 └─────────────────────────────────────────────────┘
 ```
 
-#### 3.5 UX - Flujo de solicitud de permisos
+#### Flujo de solicitud de permisos
 
 1. **Primera vez**: Solicitar permiso con explicación clara del uso
 2. **Si denegado**: Mostrar banner/modal explicando por qué es necesario
@@ -127,37 +145,7 @@ Al hacer tap en un permiso:
 
 ---
 
-### 4. Datos y Privacidad
-
-#### 4.1 Gestión de Datos
-| Función | Descripción |
-|---------|-------------|
-| Exportar datos | Descargar todos los datos (CSV/JSON) |
-| Importar datos | Cargar datos desde archivo |
-| Sincronizar | Sincronizar con nube (si hay cuenta premium) |
-
-#### 4.2 Privacidad
-| Función | Descripción |
-|---------|-------------|
-| Ver política de privacidad | PDF/Link a política |
-| Ver términos y condiciones | PDF/Link a términos |
-| Eliminar cuenta | Borrar cuenta y todos los datos |
-
-**Sub-pantalla: Confirmar eliminación**
-- Advertencia de acción irreversible
-- Campo: Escribir "ELIMINAR" para confirmar
-- Botón: Confirmar eliminación
-
-### 5. Información de la App
-
-| Item | Descripción |
-|------|-------------|
-| Versión | Número de versión actual (ej: v1.0.0) |
-| Construido | Fecha de compilación |
-| Licencias | Licencias de código abierto |
-| Changelog | Historial de versiones |
-
-### 6. Ayuda y Soporte
+### Ayuda y Soporte
 
 | Item | Descripción |
 |------|-------------|
@@ -305,27 +293,19 @@ Muestra "Iniciar sesión" prominent, menos opciones.
 ```
 [Configuración]
 │
-├── Perfil
-│   └── [Editar perfil] → Formulario → Guardar/Cancelar
-│
-├── Configuración de la App
-│   ├── Preferencias (moneda, idioma, tema)
-│   ├── Notificaciones (toggles internos)
-│   └── Categorías → Gestión de categorías
+├── Configuración de la App (config)
+│   ├── perfil → Editar perfil → Formulario → Guardar/Cancelar
+│   ├── preferencias (moneda, idioma, tema)
+│   ├── notificaciones (toggles internos)
+│   ├── categorías → Gestión de categorías
+│   ├── Datos (exportar, importar, sincronizar)
+│   └── información (versión, licencias)
 │
 ├── Permisos del Sistema
 │   ├── Cámara → Solicitar/Abrir Settings
 │   ├── Almacenamiento → Solicitar/Abrir Settings
 │   ├── Notificaciones → Solicitar/Abrir Settings
 │   └── Ubicación (opcional) → Solicitar/Abrir Settings
-│
-├── Datos y Privacidad
-│   ├── Exportar → [Selector formato] → Descarga
-│   ├── Importar → [Selector archivo]
-│   └── Eliminar cuenta → [Confirmación] → Modal warning
-│
-├── Información
-│   └── Versión, términos, privacidad (vistas solo)
 │
 └── Ayuda
     ├── FAQ → [Preguntas expandibles]
@@ -343,7 +323,6 @@ Muestra "Iniciar sesión" prominent, menos opciones.
 - SectionList para grouping
 - Switch para toggles
 - Modal para confirmaciones
-- WebView para documentos externos (T&C, privacidad)
 - Share API para exportar archivos
 
 ### Gestión de Permisos

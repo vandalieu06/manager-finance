@@ -16,7 +16,7 @@ Gastos necesarios para vivir
 | Subcategoría | Icono | Color Token |
 |--------------|-------|-------------|
 | Supermercado | 🛒 | `category_obligacion.v1` (#4F46E5) |
-| Facturas | 💡 | `secondary.v1` (#1A535C) |
+| Facturas | 💡 | `secondary.v1` (#F76132) |
 | Transporte | 🚌 | `primary.v1` (#4ECDC4) |
 | Salud | 💊 | `feedback.danger.v1` (#EF4444) |
 | Hogar | 🏠 | `accent2.v1` (#FF6B6B) |

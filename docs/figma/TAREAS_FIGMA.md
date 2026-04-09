@@ -90,10 +90,10 @@ Lista de tareas con checkbox. Marcar [x] cuando esté hecho.
 | `primary.v2` | `#81DBD5` | Variante clara |
 | `primary.v3` | `#B3EAE6` | Variante más clara |
 | `primary.v4` | `#E6F8F7` | Fondo suave |
-| `secondary.v1` | `#1A535C` | Secundario, texto sobre claros |
-| `secondary.v2` | `#578188` | Variante |
-| `secondary.v3` | `#94B0B4` | Variante |
-| `secondary.v4` | `#D1DEE0` | Fondo |
+| `secondary.v1` | `#F76132` | Secundario, acción principal |
+| `secondary.v2` | `#FF8A65` | Variante |
+| `secondary.v3` | `#FFC7B5` | Variante clara |
+| `secondary.v4` | `#FFE2D9` | Fondo |
 
 ##### Colores de Acento
 | Token | Valor | Uso |
