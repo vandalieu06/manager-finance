@@ -1,53 +1,120 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from "react-native";
 
-// constants/colors.ts
-export const Colors = {
+const colors = {
 	brand: {
-		primario: "#3B82F6",
-		secundario: "#FFFF00",
-		accento1: "#00FF00",
-		accento2: "#EC4899",
-		accento3: "#06B6D4",
+		primario: {
+			v1: "#4ECDC4",
+			v2: "#81DBD5",
+			v3: "#B3EAE6",
+			v4: "#E6F8F7",
+		},
+		secundario: {
+			v1: "#F76132",
+			v2: "#FF8A65",
+			v3: "#FFC7B5",
+			v4: "#FFE2D9",
+		},
+		accent1: {
+			v1: "#FFE66D",
+			v2: "#FFED95",
+			v3: "#FFF4BE",
+			v4: "#FFFBE6",
+		},
+		accent2: {
+			v1: "#FF6B6B",
+			v2: "#FF9393",
+			v3: "#FFBBBB",
+			v4: "#FFE3E3",
+		},
+		accent3: {
+			v1: "#F7FFF7",
+			v2: "#F9FFF9",
+			v3: "#FCFFFC",
+			v4: "#FEFFFE",
+		},
 	},
 	info: {
-		success: "#00FF00",
-		info: "#0EA5E9",
-		warning: "#F59E0B",
-		danger: "#EF4444",
+		success: {
+			v1: "#22C55E",
+			v2: "#76DE9A",
+			v3: "#B3EED0",
+			v4: "#DFF9ED",
+		},
+		info: {
+			v1: "#0EA5E9",
+			v2: "#68C1EF",
+			v3: "#A9DBF4",
+			v4: "#D8F0FA",
+		},
+		warning: {
+			v1: "#F59E0B",
+			v2: "#F8BD54",
+			v3: "#FAD997",
+			v4: "#FCEECF",
+		},
+		danger: {
+			v1: "#EF4444",
+			v2: "#ED7272",
+			v3: "#EB9D9D",
+			v4: "#E9C4C4",
+		},
 	},
-  bn:{
-    blanco: "#FFFFFF",
-    negro: "#000000"
-  }
-};
+	blackAndWhite: {
+		blanco: "#FFFFFF",
+		negro: "#000000",
+	},
+	light: {
+		text: "#11181C",
+		background: "#FFFFFF",
+		tint: "#4ECDC4",
+		icon: "#687076",
+		tabIconDefault: "#687076",
+		tabIconSelected: "#4ECDC4",
+	},
+	dark: {
+		text: "#ECEDEE",
+		background: "#151718",
+		tint: "#4ECDC4",
+		icon: "#9BA1A6",
+		tabIconDefault: "#9BA1A6",
+		tabIconSelected: "#4ECDC4",
+	},
+} as const;
 
-export const Fonts = Platform.select({
+const fontAssets = {
+	Inter: require("../assets/fonts/Inter-VariableFont_opsz,wght.ttf"),
+	"Inter-Italic": require("../assets/fonts/Inter-Italic-VariableFont_opsz,wght.ttf"),
+	RedHatMono: require("../assets/fonts/RedHatMono-VariableFont_wght.ttf"),
+	"RedHatMono-Italic": require("../assets/fonts/RedHatMono-Italic-VariableFont_wght.ttf"),
+} as const;
+
+const fonts = Platform.select({
 	ios: {
-		/** iOS `UIFontDescriptorSystemDesignDefault` */
-		sans: "system-ui",
-		/** iOS `UIFontDescriptorSystemDesignSerif` */
-		serif: "ui-serif",
-		/** iOS `UIFontDescriptorSystemDesignRounded` */
-		rounded: "ui-rounded",
-		/** iOS `UIFontDescriptorSystemDesignMonospaced` */
-		mono: "ui-monospace",
+		sans: "Inter",
+		serif: "Inter",
+		rounded: "Inter",
+		mono: "RedHatMono",
 	},
 	default: {
-		sans: "normal",
-		serif: "serif",
-		rounded: "normal",
-		mono: "monospace",
+		sans: "Inter",
+		serif: "Inter",
+		rounded: "Inter",
+		mono: "RedHatMono",
 	},
 	web: {
-		sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-		serif: "Georgia, 'Times New Roman', serif",
-		rounded:
-			"'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-		mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+		sans: "Inter, system-ui, sans-serif",
+		serif: "Inter, serif",
+		rounded: "Inter, system-ui, sans-serif",
+		mono: "'Red Hat Mono', 'RedHatMono', monospace",
 	},
 });
+
+export const Theme = {
+	Colors: colors,
+	FontAssets: fontAssets,
+	Fonts: fonts,
+} as const;
+
+export const Colors = Theme.Colors;
+export const FontAssets = Theme.FontAssets;
+export const Fonts = Theme.Fonts;
