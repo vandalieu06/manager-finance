@@ -20,10 +20,12 @@ type Tag struct {
 
 type User struct {
 	ID           uint    `gorm:"primaryKey"`
-	Username     string  `gorm:"type:varchar(50);not null;unique"`
-	Email        string  `gorm:"type:varchar(255);not null;unique;index"`
-	Password     string  `gorm:"type:varchar(255);not null"`
+	FirebaseUID  string  `gorm:"type:varchar(128);unique;index"`
+	Username     string  `gorm:"type:varchar(50)"`
+	Email        string  `gorm:"type:varchar(255);unique;index"`
 	AvatarURL    *string `gorm:"type:text"`
+	Currency     string  `gorm:"type:char(3);default:'EUR'"`
+	Theme        string  `gorm:"type:varchar(20);default:'light'"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    gorm.DeletedAt `gorm:"index"`

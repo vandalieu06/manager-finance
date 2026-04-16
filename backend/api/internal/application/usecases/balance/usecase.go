@@ -2,19 +2,19 @@ package balance
 
 import (
 	"github.com/vandalieu06/manager-finance/internal/application/dto"
-	"github.com/vandalieu06/manager-finance/internal/infrastructure/database"
+	"github.com/vandalieu06/manager-finance/internal/domain/repositories"
 )
 
 type UseCase struct {
-	repo *database.Repository
+	repo repositories.TransactionRepository
 }
 
-func NewUseCase(repo *database.Repository) *UseCase {
+func NewUseCase(repo repositories.TransactionRepository) *UseCase {
 	return &UseCase{repo: repo}
 }
 
 func (uc *UseCase) GetBalance(userID uint, currency string) (*dto.BalanceResponse, error) {
-	transactions, err := uc.repo.GetAllTransactionsByUserID(userID)
+	transactions, err := uc.repo.GetAllByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (uc *UseCase) GetBalance(userID uint, currency string) (*dto.BalanceRespons
 }
 
 func (uc *UseCase) GetBalanceByDateRange(userID uint, currency, startDate, endDate string) (*dto.BalanceResponse, error) {
-	transactions, err := uc.repo.GetTransactionsByUserIDAndDateRange(userID, startDate, endDate)
+	transactions, err := uc.repo.GetByUserIDAndDateRange(userID, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}

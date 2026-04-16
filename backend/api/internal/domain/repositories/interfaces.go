@@ -9,6 +9,7 @@ type UserRepository interface {
 	GetByID(id uint) (*entities.User, error)
 	GetByEmail(email string) (*entities.User, error)
 	GetByUsername(username string) (*entities.User, error)
+	GetByFirebaseUID(firebaseUID string) (*entities.User, error)
 	Update(user *entities.User) error
 	Delete(id uint) error
 }

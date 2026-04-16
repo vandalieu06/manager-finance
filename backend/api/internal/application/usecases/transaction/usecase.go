@@ -5,7 +5,7 @@ import (
 
 	"github.com/vandalieu06/manager-finance/internal/application/dto"
 	"github.com/vandalieu06/manager-finance/internal/domain/entities"
-	"github.com/vandalieu06/manager-finance/internal/infrastructure/database"
+	"github.com/vandalieu06/manager-finance/internal/domain/repositories"
 	"gorm.io/gorm"
 )
 
@@ -16,15 +16,16 @@ var (
 )
 
 type UseCase struct {
-	repo *database.Repository
+	repo         repositories.TransactionRepository
+	categoryRepo repositories.CategoryRepository
 }
 
-func NewUseCase(repo *database.Repository) *UseCase {
-	return &UseCase{repo: repo}
+func NewUseCase(repo repositories.TransactionRepository, categoryRepo repositories.CategoryRepository) *UseCase {
+	return &UseCase{repo: repo, categoryRepo: categoryRepo}
 }
 
 func (uc *UseCase) Create(userID uint, req dto.CreateTransactionRequest) (*dto.TransactionResponse, error) {
-	category, err := uc.repo.GetCategoryByID(req.CategoryID)
+	category, err := uc.categoryRepo.GetByID(req.CategoryID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrCategoryNotFound
@@ -43,7 +44,7 @@ func (uc *UseCase) Create(userID uint, req dto.CreateTransactionRequest) (*dto.T
 		Code:        req.Code,
 	}
 
-	if err := uc.repo.CreateTransaction(transaction); err != nil {
+	if err := uc.repo.Create(transaction); err != nil {
 		return nil, err
 	}
 
@@ -66,7 +67,7 @@ func (uc *UseCase) Create(userID uint, req dto.CreateTransactionRequest) (*dto.T
 }
 
 func (uc *UseCase) GetByID(userID, transactionID uint) (*dto.TransactionResponse, error) {
-	transaction, err := uc.repo.GetTransactionByID(transactionID)
+	transaction, err := uc.repo.GetByID(transactionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrTransactionNotFound
@@ -83,7 +84,7 @@ func (uc *UseCase) GetByID(userID, transactionID uint) (*dto.TransactionResponse
 }
 
 func (uc *UseCase) GetAllByUserID(userID uint) ([]dto.TransactionResponse, error) {
-	transactions, err := uc.repo.GetAllTransactionsByUserID(userID)
+	transactions, err := uc.repo.GetAllByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +98,7 @@ func (uc *UseCase) GetAllByUserID(userID uint) ([]dto.TransactionResponse, error
 }
 
 func (uc *UseCase) GetByUserIDAndDateRange(userID uint, startDate, endDate string) ([]dto.TransactionResponse, error) {
-	transactions, err := uc.repo.GetTransactionsByUserIDAndDateRange(userID, startDate, endDate)
+	transactions, err := uc.repo.GetByUserIDAndDateRange(userID, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +112,7 @@ func (uc *UseCase) GetByUserIDAndDateRange(userID uint, startDate, endDate strin
 }
 
 func (uc *UseCase) Update(userID, transactionID uint, req dto.UpdateTransactionRequest) (*dto.TransactionResponse, error) {
-	transaction, err := uc.repo.GetTransactionByID(transactionID)
+	transaction, err := uc.repo.GetByID(transactionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrTransactionNotFound
@@ -145,7 +146,7 @@ func (uc *UseCase) Update(userID, transactionID uint, req dto.UpdateTransactionR
 		transaction.Code = req.Code
 	}
 
-	if err := uc.repo.UpdateTransaction(transaction); err != nil {
+	if err := uc.repo.Update(transaction); err != nil {
 		return nil, err
 	}
 
@@ -154,7 +155,7 @@ func (uc *UseCase) Update(userID, transactionID uint, req dto.UpdateTransactionR
 }
 
 func (uc *UseCase) Delete(userID, transactionID uint) error {
-	transaction, err := uc.repo.GetTransactionByID(transactionID)
+	transaction, err := uc.repo.GetByID(transactionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrTransactionNotFound
@@ -166,5 +167,5 @@ func (uc *UseCase) Delete(userID, transactionID uint) error {
 		return ErrUnauthorized
 	}
 
-	return uc.repo.DeleteTransaction(transactionID)
+	return uc.repo.Delete(transactionID)
 }

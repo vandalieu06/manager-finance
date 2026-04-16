@@ -5,7 +5,7 @@ import (
 
 	"github.com/vandalieu06/manager-finance/internal/application/dto"
 	"github.com/vandalieu06/manager-finance/internal/domain/entities"
-	"github.com/vandalieu06/manager-finance/internal/infrastructure/database"
+	"github.com/vandalieu06/manager-finance/internal/domain/repositories"
 	"gorm.io/gorm"
 )
 
@@ -14,10 +14,10 @@ var (
 )
 
 type UseCase struct {
-	repo *database.Repository
+	repo repositories.CategoryRepository
 }
 
-func NewUseCase(repo *database.Repository) *UseCase {
+func NewUseCase(repo repositories.CategoryRepository) *UseCase {
 	return &UseCase{repo: repo}
 }
 
@@ -28,7 +28,7 @@ func (uc *UseCase) Create(req dto.CreateCategoryRequest) (*dto.CategoryResponse,
 		ParentID: req.ParentID,
 	}
 
-	if err := uc.repo.CreateCategory(category); err != nil {
+	if err := uc.repo.Create(category); err != nil {
 		return nil, err
 	}
 
@@ -37,7 +37,7 @@ func (uc *UseCase) Create(req dto.CreateCategoryRequest) (*dto.CategoryResponse,
 }
 
 func (uc *UseCase) GetByID(id uint) (*dto.CategoryResponse, error) {
-	category, err := uc.repo.GetCategoryByID(id)
+	category, err := uc.repo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrCategoryNotFound
@@ -50,7 +50,7 @@ func (uc *UseCase) GetByID(id uint) (*dto.CategoryResponse, error) {
 }
 
 func (uc *UseCase) GetAll() ([]dto.CategoryResponse, error) {
-	categories, err := uc.repo.GetAllCategories()
+	categories, err := uc.repo.GetAll()
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (uc *UseCase) GetAll() ([]dto.CategoryResponse, error) {
 }
 
 func (uc *UseCase) GetByType(transactionType string) ([]dto.CategoryResponse, error) {
-	categories, err := uc.repo.GetCategoriesByType(transactionType)
+	categories, err := uc.repo.GetByType(transactionType)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (uc *UseCase) GetByType(transactionType string) ([]dto.CategoryResponse, er
 }
 
 func (uc *UseCase) Update(id uint, req dto.UpdateCategoryRequest) (*dto.CategoryResponse, error) {
-	category, err := uc.repo.GetCategoryByID(id)
+	category, err := uc.repo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrCategoryNotFound
@@ -96,7 +96,7 @@ func (uc *UseCase) Update(id uint, req dto.UpdateCategoryRequest) (*dto.Category
 		category.ParentID = req.ParentID
 	}
 
-	if err := uc.repo.UpdateCategory(category); err != nil {
+	if err := uc.repo.Update(category); err != nil {
 		return nil, err
 	}
 
@@ -105,7 +105,7 @@ func (uc *UseCase) Update(id uint, req dto.UpdateCategoryRequest) (*dto.Category
 }
 
 func (uc *UseCase) Delete(id uint) error {
-	category, err := uc.repo.GetCategoryByID(id)
+	category, err := uc.repo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrCategoryNotFound
@@ -113,5 +113,5 @@ func (uc *UseCase) Delete(id uint) error {
 		return err
 	}
 
-	return uc.repo.DeleteCategory(category.ID)
+	return uc.repo.Delete(category.ID)
 }

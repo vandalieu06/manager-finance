@@ -1,69 +1,84 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
-	"time"
+	"os"
 
+	firebase "firebase.google.com/go/v4"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	authUseCase "github.com/vandalieu06/manager-finance/internal/application/usecases/auth"
-	balanceUseCase "github.com/vandalieu06/manager-finance/internal/application/usecases/balance"
-	categoryUseCase "github.com/vandalieu06/manager-finance/internal/application/usecases/category"
-	transactionUseCase "github.com/vandalieu06/manager-finance/internal/application/usecases/transaction"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/vandalieu06/manager-finance/internal/application/usecases/balance"
+	"github.com/vandalieu06/manager-finance/internal/application/usecases/category"
+	"github.com/vandalieu06/manager-finance/internal/application/usecases/transaction"
 	"github.com/vandalieu06/manager-finance/internal/handlers"
-	authInfra "github.com/vandalieu06/manager-finance/internal/infrastructure/auth"
-	db "github.com/vandalieu06/manager-finance/internal/infrastructure/database"
-	mw "github.com/vandalieu06/manager-finance/internal/infrastructure/middleware"
+	"github.com/vandalieu06/manager-finance/internal/infrastructure/database"
+	appMiddleware "github.com/vandalieu06/manager-finance/internal/infrastructure/middleware"
+	"google.golang.org/api/option"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
-	database := db.NewConnection()
+	ctx := context.Background()
+	db := database.NewConnection()
 
-	if err := db.RunMigrations(database); err != nil {
+	if err := database.RunMigrations(db); err != nil {
 		log.Fatalf("Error running migrations: %v", err)
 	}
 
-	repo := db.NewRepository(database)
+	userRepo := database.NewUserRepository(db)
+	transactionRepo := database.NewTransactionRepository(db)
+	categoryRepo := database.NewCategoryRepository(db)
+	tagRepo := database.NewTagRepository(db)
+	invoiceRepo := database.NewInvoiceRepository(db)
+	productRepo := database.NewProductRepository(db)
 
-	jwtManager := authInfra.NewJWTManager("your-secret-key-change-in-production", 24*time.Hour)
+	_ = tagRepo
+	_ = invoiceRepo
+	_ = productRepo
 
-	authUC := authUseCase.NewUseCase(repo, jwtManager)
-	transactionUC := transactionUseCase.NewUseCase(repo)
-	categoryUC := categoryUseCase.NewUseCase(repo)
-	balanceUC := balanceUseCase.NewUseCase(repo)
+	firebaseApp, err := firebase.NewApp(ctx, nil, option.WithCredentialsFile(os.Getenv("FIREBASE_CREDENTIALS")))
+	if err != nil {
+		log.Fatalf("Error initializing Firebase: %v", err)
+	}
 
-	authHandler := handlers.NewAuthHandler(authUC)
+	firebaseClient, err := appMiddleware.InitFirebase(firebaseApp)
+	if err != nil {
+		log.Fatalf("Error initializing Firebase Auth: %v", err)
+	}
+
+	transactionUC := transaction.NewUseCase(transactionRepo, categoryRepo)
+	categoryUC := category.NewUseCase(categoryRepo)
+	balanceUC := balance.NewUseCase(transactionRepo)
+
 	transactionHandler := handlers.NewTransactionHandler(transactionUC)
 	categoryHandler := handlers.NewCategoryHandler(categoryUC)
 	balanceHandler := handlers.NewBalanceHandler(balanceUC)
 
 	r := chi.NewRouter()
 
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(chiMiddleware.Logger)
+	r.Use(chiMiddleware.Recoverer)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("API de Gestión de Finanzas Personales"))
 	})
 
-	r.Route("/api/auth", func(r chi.Router) {
-		r.Mount("/", authHandler.Routes())
-	})
-
 	r.Route("/api/transactions", func(r chi.Router) {
-		r.Use(mw.AuthMiddleware(jwtManager))
+		r.Use(appMiddleware.AuthMiddleware(firebaseClient, userRepo))
 		r.Mount("/", transactionHandler.Routes())
 	})
 
 	r.Route("/api/categories", func(r chi.Router) {
-		r.Use(mw.AuthMiddleware(jwtManager))
+		r.Use(appMiddleware.AuthMiddleware(firebaseClient, userRepo))
 		r.Mount("/", categoryHandler.Routes())
 	})
 
 	r.Route("/api/balance", func(r chi.Router) {
-		r.Use(mw.AuthMiddleware(jwtManager))
+		r.Use(appMiddleware.AuthMiddleware(firebaseClient, userRepo))
 		r.Get("/", balanceHandler.GetBalance)
 	})
 
