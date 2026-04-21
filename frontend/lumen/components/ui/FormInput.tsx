@@ -77,7 +77,6 @@ export default function FormInput({
 				<TextInput
 					{...textInputProps}
 					placeholder={placeholder}
-					placeholderTextColor={colors.secondary.v3}
 					secureTextEntry={secureTextEntry}
 					editable={!isDisabled}
 					className={`min-w-[116px] flex-1 font-mono ${currentSize.input} ${

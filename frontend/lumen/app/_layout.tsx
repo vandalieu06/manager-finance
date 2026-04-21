@@ -1,29 +1,12 @@
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
 import React from "react";
 
-import colors from "@/constants/colors";
-export default function TabLayout() {
-
+export default function RootLayout() {
 	return (
-		<Tabs
-			screenOptions={{
-				tabBarActiveTintColor: colors.colors.primary.v1,
-				headerShown: false,
-			}}>
-			<Tabs.Screen
-				name="index"
-				options={{
-					title: "Home",
-			
-				}}
-			/>
-			<Tabs.Screen
-				name="explore"
-				options={{
-					title: "Explore",
-				
-				}}
-			/>
-		</Tabs>
+		<Stack screenOptions={{ headerShown: false }}>
+			<Stack.Screen name="index" />
+			<Stack.Screen name="login" />
+			<Stack.Screen name="(tabs)" />
+		</Stack>
 	);
 }
