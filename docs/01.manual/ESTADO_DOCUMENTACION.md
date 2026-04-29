@@ -8,12 +8,12 @@
 | 2. Planificación del proyecto | ✅ Completado |
 | 3. Empresa | ⚠️ Parcialmente completo |
 | 4. Diseño aplicación/página web | ⚠️ Parcialmente completo |
-| 5. Desarrollo aplicación/página web | ❌ Pendiente |
-| 6. Pruebas | ❌ Pendiente |
-| 7. Manual de instalación y configuración | ❌ Pendiente |
-| 8. Guía de usuario | ❌ Pendiente |
-| 9. Documentación (ApiDoc) | ❌ Pendiente |
-| 10. Conclusiones | ✅ Completado |
+| 5. Desarrollo aplicación/página web | ⚠️ Parcialmente completo |
+| 6. Pruebas | ⚠️ Parcialmente completo |
+| 7. Manual de instalación y configuración | ⚠️ Parcialmente completo |
+| 8. Guía de usuario | ⚠️ Parcialmente completo |
+| 9. Documentación (ApiDoc) | ❌ Pendiente de backend |
+| 10. Conclusiones | ⚠️ Revisión necesaria |
 | 11. Bibliografía, webgrafía y otros recursos | ⚠️ Parcialmente completo |
 | 12. Anexos | ❌ Pendiente |
 
@@ -64,64 +64,71 @@
 
 | Subapartado | Estado | Notas |
 |-------------|--------|-------|
-| 4.1. Especificación Funcional del Sistema | ⚠️ Parcial | En desarrollo |
-| 4.1.1. Especificación del sistema propuesto | ❌ Pendiente | |
-| 4.1.1.1. Descripción de los actores | ❌ Pendiente | |
-| 4.1.1.2. Modelo de casos de uso | ❌ Pendiente | |
-| 4.1.2. Diseño del sistema | ❌ Pendiente | |
+| 4.1. Especificación Funcional del Sistema | ⚠️ Parcial | Actualizada desde la app móvil en `Memoria_TFG_Textos_Actualizados.md` |
+| 4.1.1. Especificación del sistema propuesto | ⚠️ Parcial | Verificada contra Expo/React Native; backend pendiente |
+| 4.1.1.1. Descripción de los actores | ✅ Completado | Usuario, Firebase Auth y servicio mock de facturas |
+| 4.1.1.2. Modelo de casos de uso | ⚠️ Parcial | Casos implementados y previstos separados |
+| 4.1.2. Diseño del sistema | ⚠️ Parcial | Falta completar con backend real |
 | 4.1.2.1. Diagramas de secuencia | ❌ Pendiente | |
 | 4.1.2.2. Diagrama de clases de diseño | ❌ Pendiente | |
 | 4.1.2.3. Diagramas de estado | ❌ Pendiente | |
-| 4.1.3. Interfaces de usuario: Mapa de formularios | ❌ Pendiente | |
-| 4.2. Bases de datos* | ⚠️ Parcial | |
-| 4.2.1. Qué información se desea almacenar | ❌ Pendiente | |
-| 4.2.2. Modelo E/R | ⚠️ Parcial | Existe un modelo de ejemplo en docs (no es el final) |
-| 4.2.3. Esquema lógico normalizado | ❌ Pendiente | |
-| 4.3. Diseño de la interfaz web | ⚠️ Parcial | |
-| 4.3.1. Prototipado | ⚠️ Parcial | Solo concepto en "4. Diseño.md" |
-| 4.3.2. Guía de estilo | ❌ Pendiente | |
+| 4.1.3. Interfaces de usuario: Mapa de formularios | ⚠️ Parcial | Mapa de pantallas móvil documentado |
+| 4.2. Bases de datos* | ⚠️ Parcial | Entidades detectadas desde frontend; modelo real pendiente de backend |
+| 4.2.1. Qué información se desea almacenar | ⚠️ Parcial | Producto, factura, campo detectado, producto de factura y notificación |
+| 4.2.2. Modelo E/R | ❌ Pendiente | Requiere revisar backend |
+| 4.2.3. Esquema lógico normalizado | ❌ Pendiente | Requiere revisar backend |
+| 4.3. Diseño de la interfaz web | ⚠️ Parcial | Redactado como diseño de app móvil |
+| 4.3.1. Prototipado | ⚠️ Parcial | Pendiente incorporar capturas de Figma |
+| 4.3.2. Guía de estilo | ⚠️ Parcial | Paleta, tipografía y principios visuales documentados |
 
 **Archivos:** 
 - `01.manual/4. Diseño.md` (concepto de marca y sistema visual)
+- `01.manual/Memoria_TFG_Textos_Actualizados.md` (textos verificados desde la app móvil)
 - `03.dev/03-Arquitectura/01-EspecificacionTecnica.md` (contiene un modelo E/R de ejemplo)
 
 ---
 
-### ❌ 5. Desarrollo aplicación/página web
+### ⚠️ 5. Desarrollo aplicación/página web
 
 | Subapartado | Estado |
 |-------------|--------|
-| 5.1. Elementos gráficos y multimedia | ❌ Pendiente |
-| 5.2. Área clientes | ❌ Pendiente |
-| 5.3. Área administración | ❌ Pendiente |
+| 5.1. Elementos gráficos y multimedia | ✅ Completado |
+| 5.2. Área clientes | ⚠️ Parcial |
+| 5.3. Área administración | ❌ No implementado en app móvil |
 
-**Notas:** Hay documentación de desarrollo en `03.dev/` pero no está integrada en el documento formal.
+**Notas:** La app móvil implementa el área de cliente con datos demo y servicios mock. El área de administración no aparece en el frontend revisado.
 
 ---
 
-### ❌ 6. Pruebas
+### ⚠️ 6. Pruebas
 
 | Subapartado | Estado |
 |-------------|--------|
 | 6.1. Pruebas de usabilidad | ❌ Pendiente |
-| 6.2. Pruebas de accesibilidad | ❌ Pendiente |
-| 6.3. Pruebas (unitarias, de integración y de sistema) | ❌ Pendiente |
+| 6.2. Pruebas de accesibilidad | ⚠️ Parcial |
+| 6.3. Pruebas (unitarias, de integración y de sistema) | ⚠️ Parcial |
+
+**Notas:** El código contiene algunas etiquetas de accesibilidad y existe `npm run lint`. No se han localizado pruebas automatizadas.
 
 ---
 
-### ❌ 7. Manual de instalación y configuración
+### ⚠️ 7. Manual de instalación y configuración
 
 | Estado |
 |--------|
-| ❌ Pendiente |
+| ⚠️ Parcial |
+
+**Notas:** Instalación y ejecución de app móvil documentadas. Backend pendiente.
 
 ---
 
-### ❌ 8. Guía de usuario
+### ⚠️ 8. Guía de usuario
 
 | Estado |
 |--------|
-| ❌ Pendiente |
+| ⚠️ Parcial |
+
+**Notas:** Guía de uso de pantallas móviles redactada en `Memoria_TFG_Textos_Actualizados.md`.
 
 ---
 
@@ -129,19 +136,23 @@
 
 | Estado |
 |--------|
-| ❌ Pendiente |
+| ❌ Pendiente de backend |
+
+**Notas:** En la app móvil no hay consumo de API propia para productos/facturas/stats. Solo se verificó Firebase Auth y una nota conceptual sobre rutas `/api/user/me`.
 
 ---
 
-### ✅ 10. Conclusiones
+### ⚠️ 10. Conclusiones
 
 | Subapartado | Estado |
 |-------------|--------|
-| 10.1. Propósitos y objetivos alcanzados | ✅ Completado |
-| 10.2. Problemas y dificultades | ✅ Completado |
-| 10.3. Opinión personal y comentarios | ✅ Completado |
+| 10.1. Propósitos y objetivos alcanzados | ⚠️ Revisión necesaria |
+| 10.2. Problemas y dificultades | ⚠️ Revisión necesaria |
+| 10.3. Opinión personal y comentarios | ⚠️ Revisión necesaria |
 
 **Archivo:** `01.manual/10. Conclusiones.md`
+
+**Notas:** El archivo actual afirma objetivos como backend, OCR, IA, base de datos y Stripe como ya integrados. Conviene sustituir o matizar con las conclusiones ajustadas de `Memoria_TFG_Textos_Actualizados.md` hasta revisar backend.
 
 ---
 
@@ -165,32 +176,35 @@
 
 ## Tareas Pendientes Prioritarias
 
-1. **Completar sección 4 (Diseño)**
-   - Especificación funcional del sistema
-   - Modelo de casos de uso
-   - Diagramas de secuencia, clases y estado
-   - Modelo E/R definitivo para la aplicación de finanzas
-   - Guía de estilo completa
+1. **Revisar backend para completar lo no verificable desde la app móvil**
+   - API real y endpoints
+   - Modelos de base de datos
+   - OCR/IA productivo
+   - Despliegue y configuración del servidor
 
-2. **Crear sección 5 (Desarrollo)**
-   - Documentar elementos gráficos
-   - Área de clientes
-   - Área de administración
+2. **Completar sección 4 (Diseño)**
+   - Diagramas de secuencia, clases y estado actualizados
+   - Modelo E/R definitivo
+   - Esquema lógico normalizado
+   - Capturas o enlaces de prototipo Figma
 
-3. **Crear sección 6 (Pruebas)**
-   - Pruebas de usabilidad
-   - Pruebas de accesibilidad
-   - Pruebas unitarias, integración y sistema
+3. **Completar sección 5 (Desarrollo)**
+   - Integrar los textos móviles ya redactados
+   - Decidir si existe o no área de administración en el alcance final
 
-4. **Crear sección 7 (Manual de instalación)**
+4. **Completar sección 6 (Pruebas)**
+   - Ejecutar y documentar `npm run lint`
+   - Realizar pruebas de usabilidad
+   - Documentar accesibilidad y añadir pruebas automatizadas si procede
 
-5. **Crear sección 8 (Guía de usuario)**
+5. **Actualizar sección 10 (Conclusiones)**
+   - Sustituir afirmaciones no verificadas por objetivos parciales o pendientes
 
-6. **Crear sección 9 (ApiDoc)**
+6. **Completar sección 11 (Bibliografía)**
+   - Añadir referencias técnicas de Expo, React Native, Firebase, NativeWind y herramientas usadas
 
-7. **Completar sección 11 (Bibliografía)**
-
-8. **Crear sección 12 (Anexos)**
+7. **Crear sección 12 (Anexos)**
+   - Capturas, diagramas, estructura de carpetas y resultados de verificación
 
 ---
 
