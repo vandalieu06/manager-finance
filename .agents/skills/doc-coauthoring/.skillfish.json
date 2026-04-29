@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "doc-coauthoring",
+  "owner": "hudrazine",
+  "repo": "claude-code-toolkit",
+  "path": "plugins/doc-coauthoring/skills/doc-coauthoring",
+  "branch": "main",
+  "sha": "d9df960e61fe2bafe9183e37de6f9f6b73b74087",
+  "source": "manual"
+}
