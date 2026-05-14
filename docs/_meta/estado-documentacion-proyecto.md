@@ -37,7 +37,7 @@ Este documento analiza el estado actual de la documentación del proyecto **Lume
 ## 3. Empresa: constitución, trámites y procesos iniciales
 
 | Subsección | Estado | Observaciones |
-|------------|--------|---------------|
+| ------------ | -------- | --------------- |
 | 3.1. Descripción detallada de la empresa. Rasgos diferenciales | ✅ Hecho | Incluye modelo de negocio, SaaS, Stripe |
 | 3.2. Forma Jurídica y trámites de constitución | ✅ Hecho | Sociedad Limitada, trámites detallados |
 | 3.3. RSC y ODS propuestos. Póster | ⚠️ Parcial | RSC y ODS documentados, pero **falta póster** |

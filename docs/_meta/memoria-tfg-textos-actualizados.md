@@ -2,7 +2,7 @@
 
 Este documento reúne textos preparados para incorporar a la memoria del TFG a partir de la revisión del proyecto móvil ubicado en `/home/adri/dev/github/manager-finance-repos/mobile-app`. La documentación se mantiene en este repositorio de docs, mientras que el código móvil revisado está en el repositorio indicado.
 
-La revisión se ha realizado sobre el prototipo móvil actual desarrollado con Expo/React Native. La parte de backend queda pendiente de una revisión específica para completar los apartados de API, persistencia real, OCR productivo y despliegue.
+La revisión se ha realizado sobre la aplicación móvil actual desarrollada con Expo/React Native. La parte de backend queda pendiente de una revisión específica para completar los apartados de API, persistencia real, respuesta OCR/IA productiva y despliegue.
 
 ---
 
@@ -13,14 +13,14 @@ La revisión se ha realizado sobre el prototipo móvil actual desarrollado con E
 | 1. Definición del proyecto | Cumplido parcialmente | La definición general de Lumen sigue siendo válida, pero debe matizarse que la app móvil actual funciona con datos de demostración y servicios simulados para productos y facturas. |
 | 2. Planificación del proyecto | Cumplido parcialmente | La planificación describe tecnologías previstas como Go, PostgreSQL, OCR e IA. En la app móvil sí se verifica Expo, React Native, Firebase Auth, NativeWind y Expo Router. El resto debe contrastarse con backend. |
 | 3. Empresa | No evaluado en la app móvil | Este apartado depende de documentación empresarial, no del código de la aplicación. |
-| 4. Diseño aplicación móvil | Cumplido parcialmente | El prototipo móvil implementa navegación principal, login, home, productos, escaneo simulado, detalle de factura, estadísticas y configuración. Algunos casos de uso documentados siguen siendo previstos: registro, recuperación de contraseña, exportación, presupuestos, sincronización real, administración y suscripciones. |
+| 4. Diseño aplicación móvil | Cumplido parcialmente | La app móvil implementa navegación principal, login, home, productos, captura de factura con cámara, detalle de factura, estadísticas, configuración y cierre de sesión. Algunos casos de uso documentados siguen siendo previstos: registro, recuperación de contraseña, presupuestos, sincronización real, administración y suscripciones. |
 | 4.2. Bases de datos | Pendiente de backend | En el frontend revisado no hay base de datos local ni modelo relacional. Hay datos estáticos y stores en memoria para simular productos y facturas. |
 | 4.3. Diseño de interfaz | Cumplido parcialmente | Existe una identidad visual consistente basada en estilo brutalista, tipografía monoespaciada, sombras duras, paleta propia y componentes reutilizables. |
 | 5. Desarrollo aplicación | Cumplido parcialmente | El área de cliente móvil está implementada a nivel de interfaz y flujos simulados. No se ha identificado área de administración en la app móvil. |
 | 6. Pruebas | Pendiente | El proyecto dispone de script de lint, pero no se han localizado pruebas unitarias, de integración ni documentación formal de pruebas de usabilidad/accesibilidad. |
 | 7. Manual de instalación | Cumplido parcialmente | Puede documentarse la instalación móvil con `npm install` y ejecución con Expo. Backend pendiente. |
 | 8. Guía de usuario | Cumplido parcialmente | Puede redactarse para las pantallas actuales: login, home, productos, scan, facturas, stats y configuración. |
-| 9. Documentación API | Pendiente de backend | Solo existe una nota conceptual sobre rutas protegidas con Firebase Auth. Falta documentar endpoints reales. |
+| 9. Documentación API | Pendiente de backend | Se ha verificado `POST /api/factura` desde el flujo de cámara y una utilidad para llamadas autenticadas. Falta documentar el backend real completo. |
 | 10. Conclusiones | Debe ajustarse | Las conclusiones actuales afirman integración completa de backend, base de datos, OCR e IA. Conviene reformularlas como objetivos parciales o pendientes hasta revisar backend. |
 | 11. Bibliografía | Debe ampliarse | Faltan referencias técnicas de Expo, React Native, Firebase, Expo Router, NativeWind y React Navigation. |
 | 12. Anexos | Pendiente | Se pueden incluir capturas de Figma/app, estructura de carpetas, diagramas y scripts de ejecución. |
@@ -31,17 +31,17 @@ La revisión se ha realizado sobre el prototipo móvil actual desarrollado con E
 
 ### 4.1. Especificación funcional del sistema
 
-Lumen es una aplicación móvil de gestión financiera personal orientada a reducir el esfuerzo de registrar compras y consultar gastos cotidianos. La versión revisada se centra en la experiencia de usuario móvil y en la construcción de los principales flujos de navegación: acceso a la aplicación, consulta de resumen financiero, listado de productos, simulación de escaneo de facturas, revisión de facturas y configuración de preferencias.
+Lumen es una aplicación móvil de gestión financiera personal orientada a reducir el esfuerzo de registrar compras y consultar gastos cotidianos. La versión revisada se centra en la experiencia de usuario móvil y en la construcción de los principales flujos de navegación: acceso a la aplicación, consulta de resumen financiero, listado de productos, captura de facturas, revisión de facturas y configuración de preferencias.
 
 El sistema está desarrollado con Expo y React Native, utilizando Expo Router para organizar la navegación mediante rutas basadas en archivos. La aplicación dispone de una navegación inferior con cuatro secciones principales: Home, Productos, Scan y Configuración. Además, incluye pantallas auxiliares para login, estadísticas, detalle de producto y detalle de factura.
 
-En el estado actual, la app móvil implementa una parte importante de la interfaz y de la lógica de interacción, aunque varios procesos funcionan con datos de demostración o servicios simulados. El código de login está integrado con Firebase Auth mediante `signInWithEmailAndPassword`; para una memoria final conviene añadir credenciales o evidencias de prueba si se quiere presentar como autenticación validada. Los productos se cargan desde datos estáticos y las facturas se gestionan mediante un servicio mock en memoria que simula estados de subida, revisión y validación.
+En el estado actual, la app móvil implementa la interfaz principal y la lógica de interacción del prototipo. El código de login está integrado con Firebase Auth mediante `signInWithEmailAndPassword`; para una memoria final conviene añadir credenciales o evidencias de prueba si se quiere presentar como autenticación validada. Los productos se cargan desde datos estáticos; la captura de facturas utiliza `expo-camera` y envía la imagen a un endpoint HTTP; y la revisión posterior se gestiona mediante un servicio en memoria que representa estados de procesamiento, revisión y validación.
 
 ### 4.1.1. Actores del sistema
 
 **Usuario de la aplicación**
 
-Es el actor principal del sistema. Accede a la app mediante email y contraseña, consulta información financiera, revisa productos de demostración, utiliza el flujo simulado de facturas, añade productos manualmente a una factura y modifica opciones de configuración local.
+Es el actor principal del sistema. Accede a la app mediante email y contraseña, consulta información financiera, revisa productos de demostración, utiliza el flujo de captura de facturas, añade productos manualmente a una factura y modifica opciones de configuración local.
 
 Funciones disponibles para este actor en la versión móvil revisada:
 
@@ -51,20 +51,25 @@ Funciones disponibles para este actor en la versión móvil revisada:
 - Consultar productos registrados en datos de demostración.
 - Filtrar productos por categoría, marca, precio mínimo, precio máximo y búsqueda textual.
 - Abrir el detalle de un producto.
-- Simular la captura y subida de una factura.
+- Capturar una factura con cámara y enviar la imagen por HTTP.
 - Revisar el detalle de una factura simulada.
 - Validar o denegar una factura pendiente.
 - Añadir manualmente un producto a una factura existente.
 - Modificar datos locales de perfil dentro de la pantalla de configuración.
 - Cambiar preferencias visuales, idioma y moneda dentro del estado local de la app. El cambio de idioma afecta a los textos internacionalizados disponibles; la moneda y el tema quedan planteados como controles locales pendientes de integración completa.
+- Cerrar sesión desde Configuración mediante Firebase Auth.
 
 **Servicio de autenticación externo**
 
 Firebase Auth actúa como servicio externo encargado de validar las credenciales del usuario. En la versión actual, la pantalla de login utiliza `signInWithEmailAndPassword` para autenticar al usuario y, si el acceso es correcto, redirigirlo a la zona principal de la aplicación.
 
-**Servicio simulado de facturas**
+**Servicio local de facturas**
 
-El servicio `src/services/receipts.ts` simula el comportamiento esperado del procesamiento de facturas. Permite listar facturas, obtener una factura por identificador, simular la subida de una factura, añadir productos manuales y cambiar el estado de una factura a validada o denegada. Este servicio permite probar el flujo de interfaz antes de integrarlo con un backend real.
+El servicio `src/services/facturas.ts` gestiona en memoria el comportamiento esperado del procesamiento de facturas. Permite listar facturas, obtener una factura por identificador, simular el resultado del procesamiento, añadir productos manuales y cambiar el estado de una factura a validada o denegada. Este servicio permite mantener el flujo de revisión en la interfaz mientras se estabiliza la integración con backend real.
+
+**Servicio HTTP de factura**
+
+El hook `src/hooks/useScanCamera.tsx` usa `expo-camera` para solicitar permisos, abrir la cámara, tomar una fotografía y enviarla como `multipart/form-data` a `/api/factura`. En el código revisado la URL está definida como una dirección local de red, por lo que debe configurarse según el entorno donde se ejecute la app.
 
 ### 4.1.2. Casos de uso implementados o parcialmente implementados
 
@@ -77,14 +82,15 @@ El servicio `src/services/receipts.ts` simula el comportamiento esperado del pro
 | Buscar productos | Implementado | Permite buscar por nombre, marca, precio, categoría o fecha formateada. |
 | Filtrar productos | Implementado | Permite filtrar por categoría, marca y rango de precio. |
 | Ver detalle de producto | Implementado | La ruta `productos/[id]` muestra marca, nombre, precio, categoría, fecha e identificador. |
-| Simular flujo de captura de factura | Implementado como mock | La pantalla Scan muestra una previsualización dibujada y simula la subida sin abrir la cámara real. |
-| Simular procesamiento OCR | Implementado como mock | El servicio mock devuelve aleatoriamente éxito, factura incompleta o error. |
+| Capturar y enviar factura | Implementado parcialmente | La pantalla Scan solicita permiso de cámara, abre `expo-camera`, toma una fotografía, muestra la previsualización y envía la imagen a un endpoint HTTP. |
+| Resultado de procesamiento de factura | Implementado localmente | El servicio local representa los posibles resultados visibles: éxito, factura incompleta o error. |
 | Revisar factura | Implementado con datos mock | La pantalla de detalle muestra campos detectados, productos vinculados y estado de revisión. |
 | Validar o denegar factura | Implementado en memoria | La factura puede pasar a estado validada o denegada dentro del store simulado. |
 | Añadir producto manual a factura | Implementado en memoria | El usuario puede introducir nombre, importe, mercado y categoría para vincular un producto. |
 | Configurar perfil | Implementado localmente | Permite modificar nombre, email y contraseña dentro del estado local de la pantalla. |
 | Cambiar preferencias | Implementado localmente | Permite seleccionar idioma, moneda y alternar tema oscuro/claro en estado local. |
 | Gestionar permisos | Implementado visualmente | La pantalla de configuración muestra interruptores de cámara, almacenamiento y ubicación, sin integrarse con permisos reales del sistema. |
+| Cerrar sesión | Implementado | La pantalla Configuración llama a Firebase Auth mediante `signOut` y redirige al login. |
 
 ### 4.1.3. Funcionalidades previstas no verificadas en la app móvil
 
@@ -92,12 +98,11 @@ Las siguientes funcionalidades aparecen en la documentación previa o forman par
 
 - Registro de nuevos usuarios.
 - Recuperación de contraseña.
-- Cierre de sesión desde la interfaz.
 - Sincronización real con backend.
 - Persistencia local offline con SQLite u otra base de datos local.
-- Procesamiento OCR real con cámara o subida de imagen real.
+- Procesamiento OCR/IA productivo con respuesta real integrada en la revisión de factura.
 - Integración real con IA para extracción de productos.
-- Exportación de datos a CSV o PDF.
+- Exportación funcional de datos a CSV o PDF.
 - Gestión de presupuestos.
 - Área de administración.
 - Suscripciones o pagos con Stripe.
@@ -111,7 +116,7 @@ Las siguientes funcionalidades aparecen en la documentación previa o forman par
 En la aplicación móvil revisada no se ha identificado una base de datos local ni un esquema relacional implementado. El estado actual utiliza dos estrategias de datos:
 
 - Datos estáticos para productos, definidos en `src/assets/data/productData.ts`.
-- Stores en memoria para facturas y notificaciones, definidos en `src/services/receipts.ts` a partir de `src/assets/data/receiptData.ts`.
+- Stores en memoria para facturas y notificaciones, definidos en `src/services/facturas.ts` a partir de `src/assets/data/facturaData.ts`.
 
 Este enfoque permite validar el diseño de pantallas y flujos sin depender todavía de una API real. Para la memoria, la parte de base de datos debe completarse revisando el backend, ya que ahí deberían definirse las entidades persistentes, las relaciones, el modelo E/R y el esquema lógico normalizado.
 
@@ -174,15 +179,15 @@ La interfaz de Lumen aplica una identidad visual reconocible en las pantallas re
 | Home | `app/(tabs)/index.tsx` | Resumen financiero con tarjetas de estado y acceso a estadísticas. |
 | Productos | `app/(tabs)/productos/index.tsx` | Listado, búsqueda y filtrado de productos. |
 | Detalle de producto | `app/(tabs)/productos/[id].tsx` | Información individual de un producto. |
-| Scan | `app/(tabs)/scan.tsx` | Simulación de captura/subida de factura y entrada manual de productos. |
-| Detalle de factura | `app/receipts/[id].tsx` | Revisión de campos detectados, productos y validación de factura. |
+| Scan | `app/(tabs)/scan/index.tsx` | Captura de factura, envío HTTP y entrada manual de productos. |
+| Detalle de factura | `app/facturas/[id].tsx` | Revisión de campos detectados, productos y validación de factura. |
 | Stats | `app/stats.tsx` | Resumen de ingresos, beneficio y variación. |
 | Configuración | `app/(tabs)/config/index.tsx` | Acceso a perfil, preferencias, notificaciones, categorías, datos e información. |
 | Perfil | `app/(tabs)/config/perfil.tsx` | Edición local de datos de usuario. |
 | Preferencias | `app/(tabs)/config/preferencias.tsx` | Selección de idioma, moneda y tema. |
 | Categorías | `app/(tabs)/config/categorias.tsx` | Pantalla placeholder con título. |
-| Datos | `app/(tabs)/config/datos.tsx` | Pantalla placeholder con título. |
-| Notificaciones | `app/(tabs)/config/notificaciones.tsx` | Pantalla placeholder con título. |
+| Datos | `app/(tabs)/config/datos.tsx` | Acciones de importar, sincronizar y exportar con aviso CSV pendiente. |
+| Notificaciones | `app/(tabs)/config/notificaciones.tsx` | Interruptores locales de recordatorios, resumen y push. |
 | Información | `app/(tabs)/config/informacion.tsx` | Pantalla auxiliar de configuración. |
 
 ---
@@ -217,11 +222,11 @@ Permite consultar productos de demostración. La pantalla incluye filtros por ca
 
 **Scan**
 
-Permite simular el flujo de captura de facturas. La pantalla ofrece dos modos: foto y entrada manual. En el modo foto se muestra una previsualización dibujada antes de simular la subida de la factura. En el modo manual se puede vincular un producto a una factura existente introduciendo nombre, importe, mercado y categoría.
+Permite realizar el flujo de captura de facturas. La pantalla ofrece dos modos: foto y entrada manual. En el modo foto se solicita permiso de cámara, se abre `expo-camera`, se toma una imagen y se muestra una previsualización antes de enviarla por HTTP. En el modo manual se puede vincular un producto a una factura existente introduciendo nombre, importe, mercado y categoría.
 
 **Configuración**
 
-Agrupa las opciones de perfil, preferencias, notificaciones, categorías, datos e información. Perfil y preferencias tienen interacción local. El resto de subpantallas existen como estructura inicial, pero todavía no contienen funcionalidad completa.
+Agrupa las opciones de perfil, preferencias, notificaciones, categorías, datos e información. Perfil, preferencias, notificaciones y permisos tienen interacción local. La sección Datos muestra acciones de importar, sincronizar y exportar con aviso de funcionalidad CSV pendiente. También incluye cierre de sesión mediante Firebase Auth.
 
 ### 5.3. Área de administración
 
@@ -243,7 +248,7 @@ La propuesta de pruebas de usabilidad debe centrarse en comprobar si el usuario 
 - Interpretar el resumen de Home.
 - Buscar y filtrar productos.
 - Acceder al detalle de un producto.
-- Simular la subida de una factura.
+- Capturar una factura con la cámara y enviarla.
 - Añadir manualmente un producto a una factura.
 - Validar o denegar una factura.
 - Cambiar idioma o moneda desde preferencias.
@@ -266,7 +271,7 @@ En la app móvil existen los siguientes comandos de verificación y ejecución:
 - Ejecución en iOS: `npm run ios`.
 - Ejecución web: `npm run web`.
 
-La memoria final debería incluir el resultado de estos comandos y, si se amplía la cobertura técnica, pruebas unitarias para funciones de filtrado, servicios mock, componentes reutilizables y flujos principales.
+La revisión actual de `npm run lint` finaliza con 0 errores y 8 warnings relacionados con imports o variables no usadas. La memoria final debería incluir este resultado y, si se amplía la cobertura técnica, pruebas unitarias para funciones de filtrado, servicios locales, componentes reutilizables y flujos principales.
 
 ---
 
@@ -330,6 +335,10 @@ La aplicación inicializa Firebase desde `src/services/firebase.ts`. En la versi
 
 Esta es la situación actual del prototipo. En una versión productiva, las claves y configuración deberían gestionarse mediante variables de entorno o configuración segura del proyecto.
 
+### Configuración de API
+
+El proyecto contiene `src/services/api.ts`, preparado para realizar peticiones autenticadas con Firebase usando la variable `EXPO_PUBLIC_API_BASE_URL`. El flujo de cámara de facturas envía actualmente la imagen a una URL local fija dentro de `src/hooks/useScanCamera.tsx`; para ejecutar la app en otro entorno debe actualizarse esa URL o conectarla a la configuración por entorno.
+
 ---
 
 ## 8. Guía de usuario
@@ -348,7 +357,7 @@ En la pestaña Productos, el usuario puede consultar una lista de productos regi
 
 ### Escaneo y registro de facturas
 
-En la pestaña Scan, el usuario puede elegir entre modo foto y modo manual. En el modo foto se simula el flujo de captura de una factura mediante una previsualización dibujada antes de subirla. El sistema devuelve un estado de éxito, incompleto o error. Si la factura queda disponible, el usuario puede abrir su detalle.
+En la pestaña Scan, el usuario puede elegir entre modo foto y modo manual. En el modo foto se solicita permiso de cámara, se abre la cámara del dispositivo y se toma una fotografía de la factura. Después se muestra una previsualización y el usuario puede enviarla para su procesamiento. El resultado visible puede ser éxito, incompleto o error. Si la factura queda disponible, el usuario puede abrir su detalle.
 
 En el modo manual, el usuario puede seleccionar una factura existente y añadir un producto indicando nombre, importe, mercado y categoría.
 
@@ -362,13 +371,24 @@ La pantalla Stats presenta un resumen de ingresos, beneficios y variación. En l
 
 ### Configuración
 
-Desde Configuración, el usuario puede acceder a varias secciones. Perfil permite modificar datos locales de usuario. Preferencias permite cambiar idioma, moneda y alternar el estado visual del tema oscuro/claro. También se muestran accesos a notificaciones, categorías, datos e información, que actualmente están como pantallas base.
+Desde Configuración, el usuario puede acceder a varias secciones. Perfil permite modificar datos locales de usuario. Preferencias permite cambiar idioma, moneda y alternar el estado visual del tema oscuro/claro. Notificaciones permite activar o desactivar opciones locales, Datos muestra acciones de importar, sincronizar y exportar con aviso pendiente, y también se muestran accesos a categorías e información.
+
+Desde Configuración también se puede cerrar sesión. Al hacerlo, la app llama a Firebase Auth y redirige al usuario a la pantalla de login.
 
 ---
 
 ## 9. Documentación API
 
-La documentación de API debe completarse tras revisar el backend real. En la app móvil revisada no hay llamadas HTTP a una API propia para productos, facturas o estadísticas. La única integración externa funcional identificada es Firebase Auth para el inicio de sesión.
+La documentación de API debe completarse tras revisar el backend real. En la app móvil revisada se ha identificado una llamada HTTP para enviar imágenes de facturas y una utilidad preparada para llamadas autenticadas con Firebase. Los productos, estadísticas y revisión de facturas siguen funcionando con datos de demostración o estado local en memoria.
+
+La captura de facturas se envía desde `src/hooks/useScanCamera.tsx` mediante `multipart/form-data`:
+
+```http
+POST /api/factura
+Content-Type: multipart/form-data
+```
+
+El campo enviado es `factura`, con la imagen capturada como `factura.jpg`. En el código revisado la URL apunta a una dirección local de red (`http://10.196.17.218:3000/api/factura`), por lo que debe sustituirse por una configuración de entorno para una entrega o despliegue final.
 
 Existe una nota técnica en `mobile-app/docs/api.md` que propone un patrón de API protegido por Firebase Auth:
 
@@ -379,6 +399,8 @@ GET /api/user/me/products
 ```
 
 El patrón recomendado en esa nota consiste en enviar el token de Firebase en la cabecera `Authorization` y dejar que el backend resuelva el usuario real a partir del token, evitando rutas privadas basadas en identificadores manipulables como `/api/user/:id`. Esta recomendación todavía debe contrastarse con la implementación real del backend.
+
+Además, `src/services/api.ts` contiene `authenticatedFetch`, una utilidad que obtiene el token actual de Firebase y lo añade a la cabecera `Authorization`. Está preparada para usar `EXPO_PUBLIC_API_BASE_URL`, aunque no aparece todavía conectada a las pantallas principales.
 
 Texto pendiente para completar tras revisar backend:
 
@@ -394,13 +416,13 @@ Texto pendiente para completar tras revisar backend:
 
 ## 10. Conclusiones ajustadas al estado verificado
 
-El desarrollo actual de Lumen permite considerar cumplido de forma parcial el objetivo de construir una aplicación móvil de gestión financiera personal. Se ha implementado una interfaz funcional con navegación, autenticación mediante Firebase, consulta de productos, simulación de escaneo de facturas, revisión de facturas y configuración básica de usuario.
+El desarrollo actual de Lumen permite considerar cumplido de forma parcial el objetivo de construir una aplicación móvil de gestión financiera personal. Se ha implementado una interfaz funcional con navegación, autenticación mediante Firebase, consulta de productos, captura de facturas con cámara, envío HTTP de imagen, revisión de facturas, entrada manual de productos y configuración básica de usuario.
 
 El proyecto también ha permitido aplicar y contrastar decisiones importantes de diseño en el prototipo móvil, como el uso de Expo Router para estructurar la navegación, NativeWind para aplicar estilos, una paleta de colores centralizada y componentes reutilizables para mantener una interfaz coherente.
 
-No obstante, varios objetivos del alcance inicial siguen dependiendo de la integración con backend y servicios reales. Entre ellos destacan la persistencia de datos, la sincronización, el procesamiento OCR real, la extracción mediante IA, la documentación formal de la API, el modelo de base de datos definitivo, las pruebas automatizadas y las funcionalidades avanzadas como presupuestos, exportación o suscripciones.
+No obstante, varios objetivos del alcance inicial siguen dependiendo de la integración estable con backend y servicios reales. Entre ellos destacan la persistencia de datos, la sincronización, la respuesta productiva de OCR/IA, la documentación formal de la API, el modelo de base de datos definitivo, las pruebas automatizadas y las funcionalidades avanzadas como presupuestos, exportación funcional o suscripciones.
 
-Por tanto, el estado actual debe describirse como un prototipo móvil avanzado a nivel de interfaz y flujos de usuario. Para considerarlo un sistema completo todavía falta integrar persistencia real, API propia, procesamiento OCR/IA productivo, pruebas formales y documentación técnica del backend.
+Por tanto, el estado actual debe describirse como una app móvil funcional en estado de prototipo avanzado a nivel de interfaz y flujos de usuario. Para considerarlo un sistema productivo completo todavía falta estabilizar persistencia real, API propia, procesamiento OCR/IA productivo, pruebas formales y documentación técnica del backend.
 
 ---
 
@@ -415,6 +437,7 @@ Por tanto, el estado actual debe describirse como un prototipo móvil avanzado a
 - TypeScript: https://www.typescriptlang.org/docs/
 - Tailwind CSS: https://tailwindcss.com/docs
 - Gorhom Bottom Sheet: https://gorhom.dev/react-native-bottom-sheet/
+- Expo Camera: https://docs.expo.dev/versions/latest/sdk/camera/
 
 ---
 

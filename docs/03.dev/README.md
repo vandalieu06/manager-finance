@@ -1,5 +1,7 @@
 # Documentación del Proyecto
 
+> **⚠️ DOCUMENTACIÓN AUXILIAR/HISTÓRICA** — Esta carpeta contiene documentación técnica antigua o auxiliar. La documentación principal vigente está organizada en `docs/00.indice/` a `docs/12.anexos/`. La carpeta `docs/final/` mantiene copies finales planos para memoria o Figma.
+
 ## Lumen - Gestor de Tareas Educativo
 
 ---

@@ -66,8 +66,8 @@
 |-------------|--------|-------|
 | 4.1. Especificación Funcional del Sistema | ⚠️ Parcial | Actualizada desde la app móvil en `Memoria_TFG_Textos_Actualizados.md` |
 | 4.1.1. Especificación del sistema propuesto | ⚠️ Parcial | Verificada contra Expo/React Native; backend pendiente |
-| 4.1.1.1. Descripción de los actores | ✅ Completado | Usuario, Firebase Auth y servicio mock de facturas |
-| 4.1.1.2. Modelo de casos de uso | ⚠️ Parcial | Casos implementados y previstos separados |
+| 4.1.1.1. Descripción de los actores | ✅ Completado | Usuario, Firebase Auth, servicio local de facturas y envío HTTP de factura |
+| 4.1.1.2. Modelo de casos de uso | ⚠️ Parcial | Casos implementados y previstos separados; incluye cámara, envío de factura y logout |
 | 4.1.2. Diseño del sistema | ⚠️ Parcial | Falta completar con backend real |
 | 4.1.2.1. Diagramas de secuencia | ❌ Pendiente | |
 | 4.1.2.2. Diagrama de clases de diseño | ❌ Pendiente | |
@@ -96,7 +96,7 @@
 | 5.2. Área clientes | ⚠️ Parcial |
 | 5.3. Área administración | ❌ No implementado en app móvil |
 
-**Notas:** La app móvil implementa el área de cliente con datos demo y servicios mock. El área de administración no aparece en el frontend revisado.
+**Notas:** La app móvil implementa el área de cliente con datos demo, captura real con cámara, envío HTTP de factura y servicios locales en memoria para la revisión. El área de administración no aparece en el frontend revisado.
 
 ---
 
@@ -108,7 +108,7 @@
 | 6.2. Pruebas de accesibilidad | ⚠️ Parcial |
 | 6.3. Pruebas (unitarias, de integración y de sistema) | ⚠️ Parcial |
 
-**Notas:** El código contiene algunas etiquetas de accesibilidad y existe `npm run lint`. No se han localizado pruebas automatizadas.
+**Notas:** El código contiene algunas etiquetas de accesibilidad y existe `npm run lint`. La revisión actual devuelve 0 errores y 8 warnings. No se han localizado pruebas automatizadas.
 
 ---
 
@@ -138,7 +138,7 @@
 |--------|
 | ❌ Pendiente de backend |
 
-**Notas:** En la app móvil no hay consumo de API propia para productos/facturas/stats. Solo se verificó Firebase Auth y una nota conceptual sobre rutas `/api/user/me`.
+**Notas:** En la app móvil se ha verificado envío HTTP de factura a `/api/factura` desde el flujo de cámara y una utilidad `authenticatedFetch` preparada para API protegida con Firebase. Productos, stats y revisión de facturas siguen sin consumir API propia.
 
 ---
 
